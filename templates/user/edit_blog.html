@@ -1,0 +1,37 @@
+{% extends 'user/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Edit Blog</h2>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ blog.title }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <input type="text" class="form-control" id="description" name="description" value="{{ blog.description }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content" rows="5" required>{{ blog.content }}</textarea>
+        </div>
+
+        <div class="mb-3">
+            <label for="image" class="form-label">Blog Image</label>
+            <input type="file" class="form-control" id="image" name="image">
+            {% if blog.image %}
+                <img src="{{ blog.image.url }}" alt="Current Image" class="mt-2" width="200">
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-success">Update Blog</button>
+        <a href="{% url 'user_blog' %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}

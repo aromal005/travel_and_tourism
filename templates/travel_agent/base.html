@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Agent Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #sidebar {
+            width: 250px;
+            background: #343a40;
+            color: white;
+            height: 100vh;
+            padding: 20px;
+            position: fixed;
+        }
+        #sidebar a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+        }
+        #sidebar a:hover {
+            background: #495057;
+        }
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
+            margin-left: 260px;
+            overflow-y: auto;
+            height: calc(100vh - 60px);
+            padding-bottom: 80px;
+        }
+        .stat-box {
+            padding: 20px;
+            color: white;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 90px;
+        }
+        .blue { background: blue; }
+        .green { background: green; }
+        .yellow { background: orange; }
+        footer {
+            background: #343a40;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 50px;
+        }
+        #chart-container {
+            height: 300px;
+            overflow: visible;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Agent Dashboard</h2>
+        <a href="{% url 'travel_agent_home' %}">Dashboard</a>
+        <a href="{% url 'create_package' %}" >Create Packages</a>
+        <a href="{% url 'manage_package' %}" >Manage Packages</a>
+        <a href="{% url 'view_booking' %}">View Bookings</a>
+        <a href="{% url 'category' %}" >Create Categories</a>
+        <a href="{% url 'complaint' %}">Orders & Payments</a>
+        <a href="{% url 'payment' %}">Complaints & Reviews</a>
+    </div>
+
+    
+    <div id="main-content">
+        {% block content %}
+        {% endblock content %}
+    </div>
+
+    <footer>
+        &copy; 2025 Travel Agent Dashboard. All rights reserved.
+    </footer>
+
+    
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+{% extends 'travel_agent/base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Manage Packages</h2>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Package Name</th>
+                <th>Price</th>
+                <th>Duration</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for package in packages %}
+            <tr>
+                <td>{{ package.package_name }}</td>
+                <td>₹{{ package.price }}</td>
+                <td>{{ package.duration }} days</td>
+                <td>{{ package.description|truncatechars:75 }}</td>
+                <td>
+                    <a href="{% url 'edit_package' package.id %}" class="btn btn-warning btn-sm">Edit</a>
+                    {% comment %} <button class="btn btn-danger btn-sm" onclick="confirmDelete({{ package.id }})">Delete</button> {% endcomment %}
+                    <a href="{% url 'delete_package' package.id %}" class="btn btn-danger btn-sm" onclick="return confirmDelete(event, '{{ package.id }}')">Delete</a>
+
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center">No packages available.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function confirmDelete(event, packageId) {
+        event.preventDefault(); // Prevent default delete action
+
+        let confirmationBox = document.createElement('div');
+        confirmationBox.innerHTML = `
+            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                        background: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0,0,0,0.2); 
+                        text-align: center; border-radius: 8px; z-index: 1000;">
+                <h4>Are you sure you want to delete this package?</h4>
+                <button onclick="proceedDelete('${packageId}')" class="btn btn-danger">Delete</button>
+                <button onclick="closePopup()" class="btn btn-secondary">Cancel</button>
+            </div>
+        `;
+
+        confirmationBox.id = "delete-confirmation";
+        document.body.appendChild(confirmationBox);
+    }
+
+    function proceedDelete(packageId) {
+        // Store success message in sessionStorage before redirection
+        sessionStorage.setItem('deleteSuccess', 'Package deleted successfully!');
+        window.location.href = `/travel_agent/delete_package/${packageId}/`;
+    }
+
+    function closePopup() {
+        document.getElementById('delete-confirmation').remove();
+    }
+
+    // Show success message only after deletion
+    window.onload = function() {
+        let message = sessionStorage.getItem('deleteSuccess');
+        if (message) {
+            alert(message);
+            sessionStorage.removeItem('deleteSuccess'); // Clear the message after displaying
+        }
+    };
+</script>
+
+
+{% endblock content %}

@@ -1,0 +1,65 @@
+{% extends 'travel_agent/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Edit Package</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            <label for="package_name" class="form-label">Package Name</label>
+            <input type="text" class="form-control" id="package_name" name="package_name" value="{{ package.name }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="price" class="form-label">Price</label>
+            <input type="number" class="form-control" id="price" name="price" value="{{ package.price }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="duration" class="form-label">Duration (in days)</label>
+            <input type="number" class="form-control" id="duration" name="duration" value="{{ package.duration }}" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="3" required>{{ package.description }}</textarea>
+        </div>
+        
+        <h4>Itinerary (Day-wise Activities)</h4>
+        <div id="itinerary-container">
+            {% for day in package.itinerary %}
+            <div class="mb-3 itinerary-day">
+                <label class="form-label">Day {{ forloop.counter }}</label>
+                <input type="text" class="form-control" name="day_activity[]" value="{{ day.activity }}" required>
+                <input type="file" class="form-control mt-2" name="day_image[]">
+                <small>Current Image: <img src="{{ day.image.url }}" width="100"></small>
+            </div>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-secondary mb-3" id="add-day">Add Another Day</button>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="featured" name="featured" {% if package.featured %}checked{% endif %}>
+            <label class="form-check-label" for="featured">Mark as Featured</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Update Package</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('add-day').addEventListener('click', function () {
+        let dayCount = document.querySelectorAll('.itinerary-day').length + 1;
+        let itineraryContainer = document.getElementById('itinerary-container');
+        let newDay = document.createElement('div');
+        newDay.classList.add('mb-3', 'itinerary-day');
+        newDay.innerHTML = `
+            <label class="form-label">Day ${dayCount}</label>
+            <input type="text" class="form-control" name="day_activity[]" placeholder="Activity details" required>
+            <input type="file" class="form-control mt-2" name="day_image[]">
+        `;
+        itineraryContainer.appendChild(newDay);
+    });
+</script>
+{% endblock content %}

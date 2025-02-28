@@ -1,0 +1,103 @@
+{% extends 'user/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-user"></i> Account Details
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-box"></i> Orders
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-wallet"></i> Wallet
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i> My Address
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt"></i> Coupons
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2>Create a New Blog</h2>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Blog Title</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category</label>
+                            <select class="form-control" id="category" name="category" required>
+                                <option value="" selected disabled>Select a Category</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Blog Description</label>
+                            <input type="text" class="form-control" id="description" name="description" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="content" class="form-label">Blog Content</label>
+                            <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Upload Image</label>
+                            <input type="file" class="form-control" id="image" name="image">
+                        </div>
+                        
+                        <!-- Customization Options -->
+                        <h4 class="mt-4">Customize Blog Appearance</h4>
+                        <div class="mb-3">
+                            <label for="layout" class="form-label">Choose Layout</label>
+                            <select class="form-control" id="layout" name="layout">
+                                <option value="default">Default</option>
+                                <option value="grid">Grid</option>
+                                <option value="list">List</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="font" class="form-label">Choose Font</label>
+                            <select class="form-control" id="font" name="font">
+                                <option value="Arial">Arial</option>
+                                <option value="Times New Roman">Times New Roman</option>
+                                <option value="Courier New">Courier New</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="style" class="form-label">Choose Style</label>
+                            <select class="form-control" id="style" name="style">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="colorful">Colorful</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

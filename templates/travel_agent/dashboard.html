@@ -1,0 +1,48 @@
+{% extends "travel_agent/base.html" %}
+{% block content %}
+
+{% if user.is_authenticated %}
+    <h2>Welcome, {{ username }}!</h2>
+{% endif %}
+
+    <div id="dashboard">
+        <h2>Dashboard</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-box blue">Total Packages<br>15</div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box green">Total Bookings<br>120</div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-box yellow">Total Revenue<br>$24,000</div>
+            </div>
+        </div>
+        <div id="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+
+
+<script>      
+    window.onload = function () {
+        var ctx = document.getElementById('myChart').getContext('2d');
+        var myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Bookings',
+                    data: [12, 19, 3, 5, 2, 3],
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true
+            }
+        });
+    }
+</script>
+
+{% endblock content %}

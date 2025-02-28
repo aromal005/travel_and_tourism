@@ -1,0 +1,78 @@
+{% extends 'user/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-user"></i> Account Details
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book"></i> Bookings
+                </a>
+                <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-heart"></i> Wishlists
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i> My Address
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt"></i> Coupons
+                </a>
+                <a href="{% url 'user_blog' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Account Details Section -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Account Details</h5>
+                    <div class="row">
+                        <!-- Profile Picture Section -->
+                        <div class="col-md-4 text-center">
+                            <img src="{{ user.profile_image_url|default:'/static/images/default-avatar.png' }}" 
+                                 class="rounded-circle" width="120" height="120" alt="User Profile">
+                            <h5 class="mt-2">{{ user.name }}</h5>
+                            <button class="btn btn-primary btn-sm">Edit Profile</button>
+                        </div>
+                        
+                        <!-- User Information -->
+                        <div class="col-md-8">
+                            <table class="table">
+                                <tbody>
+                                    <tr>
+                                        <th>Full Name</th>
+                                        <td>{{ user.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email</th>
+                                        <td>{{ user.email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Phone</th>
+                                        <td>{{ user.phone|default:'N/A' }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Referral Code</th>
+                                        <td>{{ user.referral_code|default:'-' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <button class="btn btn-success btn-sm">Add New</button>
+                            <button class="btn btn-warning btn-sm">Change</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

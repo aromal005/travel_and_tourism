@@ -1,0 +1,68 @@
+{% extends 'user/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Your Wishlist</h2>
+
+    <!-- Alert Message for Wishlist Actions -->
+    <div id="wishlist-alert" style="display: none; position: fixed; top: 10px; right: 10px; background-color: #dc3545; color: white; padding: 10px; border-radius: 5px; z-index: 1000;">
+    </div>
+
+    <div class="row">
+        {% for item in wishlist_items %}
+        <div class="col-md-4 package-card-{{ item.package.id }}">
+            <div class="card mb-3">
+                <img src="{{ item.package.itineraries.first.image.url }}" class="card-img-top" alt="...">
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.package.package_name }}</h5>
+                    <p class="card-text">{{ item.package.description|truncatewords:10 }}</p>
+                    <a href="{% url 'package_detail' item.package.id %}" class="btn btn-primary">View Package</a>
+                    <button class="btn btn-danger remove-wishlist-btn" data-package-id="{{ item.package.id }}">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p>No items in your wishlist.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    $(".remove-wishlist-btn").click(function(event) {
+        event.preventDefault(); // Prevent page refresh
+
+        var packageId = $(this).data("package-id");
+        var cardSelector = ".package-card-" + packageId;
+
+        $.ajax({
+            url: "/wishlist/add/" + packageId + "/",
+            type: "GET",
+            success: function(response) {
+                var message = response.message;
+                var status = response.status;
+
+                // Show alert message
+                $("#wishlist-alert").text(message).slideUp();
+
+                // Remove package card from the wishlist if successfully removed
+                if (status === "removed") {
+                    $(cardSelector).slideUp("slow", function() {
+                        $(this).remove();
+                    });
+                }
+
+                // Hide alert after 3 seconds
+                setTimeout(function() {
+                    $("#wishlist-alert").slideUp();
+                }, 3000);
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,196 @@
+{% extends 'user/base.html' %}
+
+{% block content %}
+
+<style>
+.itinerary-card {
+    height: 250px;
+    display: flex;
+    align-items: stretch;
+}
+
+.itinerary-card .img-container {
+    height: 100%;
+    overflow: hidden;
+}
+
+.itinerary-card img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+.itinerary-card .card-body {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ai-itinerary-card {
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 10px;
+    padding: 15px;
+}
+
+.info-section {
+    background: #f1f1f1;
+    padding: 15px;
+    border-radius: 10px;
+
+    .itinerary-day {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-left: 4px solid #007bff;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+    
+    .itinerary-day h4 {
+        margin-bottom: 5px;
+        color: #007bff;
+    }
+    
+    .itinerary-day ul {
+        padding-left: 20px;
+    }
+    
+    .itinerary-day li {
+        margin-bottom: 5px;
+    }
+    
+}
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2>{{package.package_name}}</h2>
+        <a href="#" class="wishlist-link btn btn-outline-danger" data-package-id="{{ package.id }}">
+            {% if package in user.wishlist_packages.all %}
+                <i class="fas fa-heart text-danger"></i> Remove from Wishlist
+            {% else %}
+                <i class="far fa-heart"></i> Add to Wishlist
+            {% endif %}
+        </a>
+    </div>
+
+    <div class="card p-3 mb-4">
+        <p><strong>Price:</strong> ${{package.price}}</p>
+        <p><strong>Duration:</strong> {{package.duration}} days</p>
+        <p><strong>Highlights:</strong> {{package.description}}</p>
+    </div>
+
+    <h3 class="mb-3">Itinerary</h3>
+    {% for itinerary in package.itineraries.all %}
+    <div class="card mb-3 itinerary-card">
+        <div class="row g-0">
+            <div class="col-md-4 img-container">
+                <img src="{{ itinerary.image.url }}" class="img-fluid rounded-start" alt="Day {{ itinerary.day_number }}">
+            </div>
+            <div class="col-md-8 d-flex flex-column">
+                <div class="card-body flex-grow-1">
+                    <h5 class="card-title">Day {{ itinerary.day_number }}</h5>
+                    <p class="card-text">{{ itinerary.activity_details }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <h3 class="mt-4">🌍 AI-Powered Smart Itinerary</h3>
+    <div class="card p-3 mb-4 ai-itinerary-card">
+        <p>Click the button below to generate a personalized itinerary based on real-time conditions.</p>
+        <button id="generate_itinerary" class="btn btn-success">🔄 Generate AI Itinerary</button>
+        <div id="ai_itinerary" class="mt-3">
+            <p class="text-muted">Your AI itinerary will appear here.</p>
+        </div>
+    </div>
+
+    <div class="info-section p-3 mt-4 border rounded">
+        <h4>🌦️ Weather Updates</h4>
+        <p id="weather_info">Fetching real-time weather data...</p>
+
+        <h4>⚠️ Travel Alerts</h4>
+        <p id="travel_alerts">Fetching latest travel updates...</p>
+    </div>
+
+    <div class="text-center mt-4">
+        <button class="btn btn-primary btn-lg">Book Now</button>
+        <a href="{% url 'weather_updates' %}"><button class="btn btn-primary btn-lg">Weather Updates</button></a>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    $(".wishlist-link").click(function(event) {
+        event.preventDefault();  
+
+        var packageId = $(this).data("package-id");
+        var link = $(this);
+
+        $.ajax({
+            url: "/wishlist/add/" + packageId + "/",
+            type: "GET",
+            success: function(response) {
+                var message = response.message;
+                var status = response.status;
+                
+                $("#wishlist-alert").text(message).fadeIn();
+
+                if (status === "added") {
+                    link.html('<i class="fas fa-heart text-danger"></i> Remove from Wishlist');
+                } else {
+                    link.html('<i class="far fa-heart"></i> Add to Wishlist');
+                }
+
+                setTimeout(function() {
+                    $("#wishlist-alert").fadeOut();
+                }, 3000);
+            }
+        });
+    });
+
+    $("#generate_itinerary").click(function() {
+        $("#ai_itinerary").html("<p>Generating AI itinerary... Please wait.</p>");
+
+        $.ajax({
+            url: "/generate_itinerary/",
+            type: "GET",
+            data: {
+                destination: "{{ package.package_name }}",
+                days: "{{ package.duration }}"
+            },
+            success: function(response) {
+                let itineraryHtml = "";
+                
+                response.itinerary.forEach(day => {
+                    itineraryHtml += `
+                        <div class="itinerary-day">
+                            <h4>Day ${day.day}</h4>
+                            <ul>
+                                ${day.activities.map(activity => `<li>${activity}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+            
+                $("#ai_itinerary").html(itineraryHtml);
+            },
+            error: function() {
+                $("#ai_itinerary").html("<p class='text-danger'>Error generating itinerary. Try again later.</p>");
+            }
+        });
+    });
+
+    $.get("/get_weather/", { destination: "{{ package.package_name }}" }, function(data) {
+        $("#weather_info").html(`<p><strong>${data.weather}</strong>, ${data.temperature}°C</p>`);
+    });
+
+    $.get("/get_travel_alerts/", { destination: "{{ package.package_name }}" }, function(data) {
+        $("#travel_alerts").html(`<p>${data.alerts}</p>`);
+    });
+});
+</script>
+
+{% endblock %}
