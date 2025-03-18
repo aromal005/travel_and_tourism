@@ -12,5 +12,6 @@ urlpatterns = [
     path('create-category/', views.create_category, name='create_category'),
     path('complaint/', views.complaint, name='complaint'),
     path('payment/', views.view_payment, name='payment'),
+    path('agent-profile/', views.agent_profile, name='agent_profile'),
      
 ]

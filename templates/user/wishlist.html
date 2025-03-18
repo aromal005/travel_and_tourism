@@ -1,31 +1,84 @@
 {% extends 'user/base.html' %}
 
 {% block content %}
+
+<style>
+    .card-body {
+        min-width: 200px; /* Adjust based on your design */
+    }
+    
+</style>
+
 <div class="container mt-4">
-    <h2>Your Wishlist</h2>
-
-    <!-- Alert Message for Wishlist Actions -->
-    <div id="wishlist-alert" style="display: none; position: fixed; top: 10px; right: 10px; background-color: #dc3545; color: white; padding: 10px; border-radius: 5px; z-index: 1000;">
-    </div>
-
     <div class="row">
-        {% for item in wishlist_items %}
-        <div class="col-md-4 package-card-{{ item.package.id }}">
-            <div class="card mb-3">
-                <img src="{{ item.package.itineraries.first.image.url }}" class="card-img-top" alt="...">
-                <div class="card-body">
-                    <h5 class="card-title">{{ item.package.package_name }}</h5>
-                    <p class="card-text">{{ item.package.description|truncatewords:10 }}</p>
-                    <a href="{% url 'package_detail' item.package.id %}" class="btn btn-primary">View Package</a>
-                    <button class="btn btn-danger remove-wishlist-btn" data-package-id="{{ item.package.id }}">
-                        Remove
-                    </button>
-                </div>
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user"></i> Account Details
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book"></i> Bookings
+                </a>
+                <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'wishlist' %}active{% endif %}">
+                    <i class="fas fa-heart"></i> Wishlists
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i> My Address
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt"></i> Coupons
+                </a>
+                <a href="{% url 'user_blog' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'user_blog' %}active{% endif %}">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
             </div>
         </div>
-        {% empty %}
-        <p>No items in your wishlist.</p>
-        {% endfor %}
+
+        <!-- Wishlist Content -->
+        <div class="col-md-9">
+            <h2>Your Wishlist</h2>
+
+            <!-- Alert Message for Wishlist Actions -->
+            <div id="wishlist-alert" style="display: none; position: fixed; top: 10px; right: 10px; background-color: #dc3545; color: white; padding: 10px; border-radius: 5px; z-index: 1000;">
+            </div>
+
+            <div class="row">
+                {% for item in wishlist_items %}
+                <div class="col-md-4 package-card-{{ item.package.id }}">
+                    <div class="card mb-3">
+                        <img src="{{ item.package.itineraries.first.image.url }}" class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.package.package_name }}</h5>
+                            <p class="card-text">{{ item.package.description|truncatewords:10 }}</p>
+                            <!--Button start-->
+                            <div class="d-flex justify-content-center align-items-center gap-2">
+                                <a href="{% url 'package_detail' item.package.id %}" 
+                                   class="btn btn-success btn-sm d-flex align-items-center justify-content-center"
+                                   style="height: 36px; min-width: 120px; padding: 5px 10px; font-size: 14px; white-space: nowrap;">
+                                   View Package
+                                </a>
+                                <button class="btn btn-danger btn-sm d-flex align-items-center justify-content-center remove-wishlist-btn"
+                                   style="height: 36px; min-width: 120px; padding: 5px 10px; font-size: 14px; white-space: nowrap;"
+                                   data-package-id="{{ item.package.id }}">
+                                   Remove
+                                </button>
+                            </div>
+                            
+                            
+                                                    
+                            <!--Button END-->                            
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p>No items in your wishlist.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -46,7 +99,7 @@ $(document).ready(function() {
                 var status = response.status;
 
                 // Show alert message
-                $("#wishlist-alert").text(message).slideUp();
+                $("#wishlist-alert").text(message).slideDown();
 
                 // Remove package card from the wishlist if successfully removed
                 if (status === "removed") {

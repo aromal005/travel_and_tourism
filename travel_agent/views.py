@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render,redirect
 from . models import TravelPackage,Itinerary, Category
 from django.contrib import messages  # Import Django messages
 from django.contrib.auth.decorators import login_required
+from common.models import CustomUser, TravelAgentProfile
 
 
 def travel_agent_register(request):
@@ -114,4 +115,19 @@ def delete_package(request, id):
 
     messages.success(request, "Package deleted successfully!")  # Success message
     return redirect('manage_package')
+
+@login_required
+def agent_profile(request):
+    if request.user.user_type != 'travel_agent':
+        return render(request, '403.html')  # Redirect if not a travel agent
+
+    travel_agent = get_object_or_404(TravelAgentProfile, user=request.user)
+
+    context = {
+        'username': request.user.username,
+        'email': request.user.email,
+        'phone': request.user.phone,
+        'company_name': travel_agent.travel_company_name,
+    }
+    return render(request, 'travel_agent/agent_profile.html', context)
 

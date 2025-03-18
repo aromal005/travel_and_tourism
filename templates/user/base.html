@@ -44,6 +44,7 @@
    </style>
 </head>
 
+
 <body>
     <!-- Topbar Start -->
     <div class="container-fluid bg-light pt-3 d-none d-lg-block">
@@ -101,21 +102,27 @@
                             <a href="" class="nav-link dropdown-toggle" data-toggle="dropdown">Pages</a>
                             <div class="dropdown-menu border-0 rounded-0 m-0">
                                 <a href="{% url 'blog' %}" class="dropdown-item">Blog Grid</a>
-                                <a href="{% url 'single' %}" class="dropdown-item">Blog Detail</a>
                                 <a href="{% url 'destination' %}" class="dropdown-item">Destination</a>
                                 <a href="{% url 'guide' %}" class="dropdown-item">Travel Guides</a>
                                 <a href="{% url 'testimonial' %}" class="dropdown-item">Testimonial</a>
                             </div>
                         </div>
                         <a href="{% url 'contact' %}" class="nav-item nav-link">Contact</a>
-                        {% if user.is_authenticated %}
-                           <a href="{% url 'profile' %}"><div class="default-icon">
+                        {% if user.is_authenticated and role == 'user' %}
+                        <a href="{% url 'profile' %}">
+                            <div class="default-icon">
                                 <img src="{% static 'assets/img/default-icon.jpg' %}" alt="">
-                            </div></a> 
+                            </div>
+                        </a> 
+                        {% elif user.is_authenticated and role == 'travel_agent' %}
+                            <a href="{% url 'travel_agent_home' %}" class="nav-item nav-link">
+                                    Back to Dashboard
+                            </a> 
                         {% else %}
                             <a href="{% url 'login' %}" class="nav-item nav-link">Login</a>
-                            <a href="{% url 'register_travel_agent' %}" class="nav-item nav-link">Are you here to business</a>
+                            <a href="{% url 'register_travel_agent' %}" class="nav-item nav-link">Are you here for business?</a>
                         {% endif %}
+
                     </div>
                 </div>
             </nav>
@@ -215,6 +222,10 @@
     <script src="lib/tempusdominus/js/moment.min.js"></script>
     <script src="lib/tempusdominus/js/moment-timezone.min.js"></script>
     <script src="lib/tempusdominus/js/tempusdominus-bootstrap-4.min.js"></script>
+
+   
+  
+
 
     <!-- Contact Javascript File -->
     <script src="mail/jqBootstrapValidation.min.js"></script>

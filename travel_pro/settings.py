@@ -66,6 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'common.context_processors.user_role',
             ],
         },
     },
@@ -152,4 +153,5 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "161b8847e1d649a8e192ea20d332f1dc")
+NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 #print("GEMINI_API_KEY:", GEMINI_API_KEY)

@@ -53,6 +53,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class TravelAgentProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, primary_key=True)
     travel_company_name = models.CharField(max_length=255)
+    #agent_icon = models.ImageField(upload_to='profile_images/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.travel_company_name}"
+
+# User Profile
+class UserProfile(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
+    address = models.TextField(blank=True, null=True)
+    image = models.ImageField(upload_to='profile_images/', blank=True, null=True)
+    
+    def __str__(self):
+        return f"{self.user.username}'s Profile"

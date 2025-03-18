@@ -111,10 +111,14 @@
 
         <h4>⚠️ Travel Alerts</h4>
         <p id="travel_alerts">Fetching latest travel updates...</p>
+        <div class="news-section p-3 mt-4 border rounded">
+            <h4>📰 Latest Travel News</h4>
+            <div id="travel_news">Fetching the latest travel news...</div>
+        </div>
     </div>
 
     <div class="text-center mt-4">
-        <button class="btn btn-primary btn-lg">Book Now</button>
+        <a href="{% url 'booking' package.id %}" ><button class="btn btn-primary btn-lg">Book Now</button></a>
         <a href="{% url 'weather_updates' %}"><button class="btn btn-primary btn-lg">Weather Updates</button></a>
     </div>
 </div>
@@ -187,10 +191,54 @@ $(document).ready(function() {
         $("#weather_info").html(`<p><strong>${data.weather}</strong>, ${data.temperature}°C</p>`);
     });
 
-    $.get("/get_travel_alerts/", { destination: "{{ package.package_name }}" }, function(data) {
-        $("#travel_alerts").html(`<p>${data.alerts}</p>`);
-    });
+  
 });
+
+$.get("/get_travel_news/", { destination: "{{ package.package_name }}" })
+  .done(function(data) {
+      let newsHtml = "";
+      if (data.news.length === 0) {
+          newsHtml = "<p>No travel news available.</p>";
+      } else {
+          data.news.forEach(news => {
+              newsHtml += `
+                  <div class="news-item">
+                      <h5><a href="${news.url}" target="_blank">${news.title}</a></h5>
+                      <p>${news.description}</p>
+                  </div>
+              `;
+          });
+      }
+      $("#travel_news").html(newsHtml);
+  })
+  .fail(function() {
+      $("#travel_news").html("<p class='text-danger'>Failed to fetch travel news.</p>");
+  });
+
+  $.get("/get_travel_alerts/", { destination: "{{ package.package_name }}" })
+  .done(function(data) {
+      let alertsHtml = "";
+      if (data.alerts.length === 0) {
+          alertsHtml = "<p>No recent travel alerts.</p>";
+      } else {
+          data.alerts.forEach(alert => {
+              alertsHtml += `
+                  <div class="alert-item mb-2 p-2 border rounded">
+                      <h5><a href="${alert.url}" target="_blank">${alert.title}</a></h5>
+                      <p>${alert.description}</p>
+                      <small class="text-muted">Source: ${alert.source}</small>
+                  </div>
+              `;
+          });
+      }
+      $("#travel_alerts").html(alertsHtml);
+  })
+  .fail(function() {
+      $("#travel_alerts").html("<p class='text-danger'>Failed to fetch travel alerts.</p>");
+  });
+
+
+
 </script>
 
 {% endblock %}

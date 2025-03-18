@@ -6,13 +6,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from travel_agent.models import TravelPackage, Itinerary
 import os
+from django.db.models import Count
+from django import template
 from django.http import JsonResponse
 from datetime import datetime, timedelta
 import requests
 from collections import defaultdict
 from travel_agent.models import Category
 from . models import Blog, Wishlist
-from common.models import CustomUser
+from common.models import CustomUser,UserProfile
 from django.contrib.auth.decorators import login_required
 import google.generativeai as genai
 from django.conf import settings
@@ -23,7 +25,10 @@ CustomUser = get_user_model()
 # Create your views here.
 
 def home(request):
+ 
     return render(request, 'user/index.html')
+
+
 
 def about(request):
     return render(request, 'user/about.html')
@@ -41,13 +46,19 @@ def package(request):
 
 def blog(request):
     blogs = Blog.objects.all()
-    return render(request, 'user/blog.html', {"blogs":blogs})
+    category_blog_counts = Category.objects.annotate(blog_count=Count('blog'))
+    recent_blogs = Blog.objects.order_by('-created_at')[:5]
+    return render(request, 'user/blog.html', {"blogs":blogs, "category_blog_counts":category_blog_counts, "recent_blogs":recent_blogs})
 
 def contact(request):
     return render(request, 'user/contact.html')
 
-def single(request):
-    return render(request, 'user/single.html')
+def single(request, bid):
+    blog = get_object_or_404(Blog, id=bid)
+    category_blog_counts = Category.objects.annotate(blog_count=Count('blog'))
+    recent_blogs = Blog.objects.order_by('-created_at')[:5]
+    parts = blog.content.split("[image]") 
+    return render(request, 'user/single.html', {"blog":blog, "parts": parts, "category_blog_counts":category_blog_counts, "recent_blogs":recent_blogs})
 
 def testimonial(request):
     return render(request, 'user/testimonial.html')
@@ -238,7 +249,7 @@ def generate_ai_itinerary(request):
         response = model.generate_content(prompt)
 
         # Debugging: Print full response
-        print("Full AI Response:", response)
+        #print("Full AI Response:", response)
 
         # Extract text from response
         if response and response.candidates and response.candidates[0].content.parts:
@@ -278,3 +289,100 @@ def generate_ai_itinerary(request):
     except Exception as e:
         logger.exception("Error generating AI itinerary")
         return JsonResponse({"error": str(e)}, status=500)
+    
+    
+register = template.Library()
+@register.simple_tag
+def active_link(request, url_name):
+    return "active" if request.resolver_match.url_name == url_name else ""
+
+
+#TRAVEL NEWS ALERT
+def get_travel_news(request):
+    destination = request.GET.get("destination", "travel safety")  # Default if no destination is provided
+    NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+
+    if not NEWS_API_KEY:
+        return JsonResponse({"error": "API Key not found"}, status=500)
+
+    url = f"https://newsapi.org/v2/everything?q={destination} travel&language=en&apiKey={NEWS_API_KEY}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        if data["status"] != "ok":
+            return JsonResponse({"error": "Failed to fetch news"}, status=500)
+
+        # Extract relevant articles
+        articles = [
+            {
+                "title": article["title"],
+                "description": article["description"],
+                "url": article["url"],
+                "source": article["source"]["name"]
+            }
+            for article in data["articles"][:3]  # Limit to top 5 news items
+        ]
+
+        return JsonResponse({"news": articles})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+def get_travel_alerts(request):
+    destination = request.GET.get("destination", "global")  # Default to global alerts
+    NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+
+    if not NEWS_API_KEY:
+        return JsonResponse({"error": "API Key not found"}, status=500)
+
+    url = f"https://newsapi.org/v2/everything?q={destination} safety OR protest OR crisis OR emergency OR political unrest&language=en&sortBy=publishedAt&apiKey={NEWS_API_KEY}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        if data["status"] != "ok":
+            return JsonResponse({"error": "Failed to fetch alerts"}, status=500)
+
+        alerts = [
+            {
+                "title": article["title"],
+                "description": article.get("description", "No description available."),
+                "url": article["url"],
+                "source": article["source"]["name"]
+            }
+            for article in data.get("articles", [])[:5]
+        ]
+
+        return JsonResponse({"alerts": alerts})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+def edit_user_profile(request):
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        fullname = request.POST.get('fullname')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('address')
+        
+        request.user.username = fullname
+        request.user.email = email
+        request.user.phone = phone
+        request.user.save()
+        
+        user_profile.address = address
+        user_profile.save()
+        
+        return JsonResponse({'success': True})
+    
+    return render(request, 'profile.html', {'user_profile': user_profile})
+
+def booking(request, package_id):
+    package = get_object_or_404(TravelPackage, id=package_id) 
+    print(package) 
+    return render(request, 'user/booking.html', {'package': package})
