@@ -1,0 +1,54 @@
+{% extends "admin_app/base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<div class="content">
+            <div class="row g-4 mt-3">
+                <div class="col-md-4">
+                    <div class="p-4 glass-effect dashboard-card">
+                        <h5>Total Users</h5>
+                        <h2>1,245</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 glass-effect dashboard-card">
+                        <h5>Active Subscriptions</h5>
+                        <h2>150</h2>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-4 glass-effect dashboard-card">
+                        <h5>Monthly Revenue</h5>
+                        <h2>$12,300</h2>
+                    </div>
+                </div>
+            </div> 
+
+            <!-- Chart -->
+             <div class="mt-4 p-4 glass-effect chart-container">
+                <canvas id="revenueChart"></canvas>
+            </div>  
+
+            <script>
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: [1000, 2500, 3500, 5000, 6500],
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)'
+                }]
+            }
+        });
+
+        document.getElementById("darkModeToggle").addEventListener("click", function() {
+            document.body.classList.toggle("dark-mode");
+        });
+    </script>
+
+{% endblock content %}

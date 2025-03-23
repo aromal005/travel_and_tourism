@@ -26,5 +26,7 @@ urlpatterns = [
     path('get_travel_news/', views.get_travel_news, name='get_travel_news'),
     path('get_travel_alerts/', views.get_travel_alerts, name='get_travel_alerts'),
     path('edit-profile/', views.edit_user_profile, name='edit_user_profile'),
-    path('booking/<int:package_id>/', views.booking, name='booking')
+    path('booking/<int:package_id>/', views.booking, name='booking'),
+    path('store-bookings/<int:package_id>/', views.store_bookings, name='store_bookings'),
+    path('view-bookings/', views.view_bookings, name='view_bookings'),
 ]

@@ -1,0 +1,123 @@
+{% extends 'user/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-user"></i> Account Details
+                </a>
+                <a href="{% url 'view_bookings' %}" class="list-group-item list-group-item-action active">
+                    <i class="fas fa-book"></i> Bookings
+                </a>
+                <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-heart"></i> Wishlists
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i> My Address
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt"></i> Coupons
+                </a>
+                <a href="{% url 'user_blog' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Booking Details Section -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-book"></i> My Bookings</h5>
+
+                    {% if bookings %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead class="thead-dark">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Package Name</th>
+                                        <th>Travel Date</th>
+                                        <th>Total Cost</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for booking in bookings %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ booking.travel_package.package_name }}</td>
+                                        <td>{{ booking.travel_date }}</td>
+                                        <td>₹{{ booking.total_price }}</td>
+                                        <td>
+                                            {% if booking.status == "Confirmed" %}
+                                                <span class="badge badge-success">Confirmed</span>
+                                            {% elif booking.status == "Pending" %}
+                                                <span class="badge badge-warning">Pending</span>
+                                            {% else %}
+                                                <span class="badge badge-danger">Cancelled</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="#" class="btn btn-info btn-sm">
+                                                <i class="fas fa-eye"></i> View
+                                            </a>
+                                            {% if booking.status != "Cancelled" %}
+                                            <button class="btn btn-danger btn-sm cancel-booking" data-id="{{ booking.id }}">
+                                                <i class="fas fa-times"></i> Cancel
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No bookings found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Booking Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".cancel-booking").forEach(button => {
+        button.addEventListener("click", function() {
+            let bookingId = this.getAttribute("data-id");
+            if (confirm("Are you sure you want to cancel this booking?")) {
+                fetch("#", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}"
+                    },
+                    body: JSON.stringify({ booking_id: bookingId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Booking cancelled successfully!");
+                        location.reload();
+                    } else {
+                        alert("Error cancelling booking.");
+                    }
+                });
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

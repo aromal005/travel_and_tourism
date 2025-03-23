@@ -1,0 +1,72 @@
+{% extends 'admin_app/base.html' %}
+{% block content %}
+
+    <div class="content p-4" style="padding-top: 100px; margin-top: 60px;">
+        <h2 class="mb-4">User Management - Customers</h2>
+        <div class="card glass-effect p-3">
+            <input type="text" class="form-control mb-3" placeholder="Search Customers...">
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John Doe</td>
+                            <td>john@example.com</td>
+                            <td>+1234567890</td>
+                            <td><span class="badge bg-success">Active</span></td>
+                            <td>
+                                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#viewCustomerModal">View</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Jane Smith</td>
+                            <td>jane@example.com</td>
+                            <td>+9876543210</td>
+                            <td><span class="badge bg-danger">Blocked</span></td>
+                            <td>
+                                <button class="btn btn-info btn-sm">View</button>
+                                <button class="btn btn-danger btn-sm">Delete</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+ <!-- Modal for Viewing Customer Details -->
+<div class="modal fade" id="viewCustomerModal" tabindex="-1" aria-labelledby="viewCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewCustomerModalLabel">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Name:</strong> John Doe</p>
+                <p><strong>Email:</strong> john@example.com</p>
+                <p><strong>Phone:</strong> +1234567890</p>
+                <p><strong>Total Bookings:</strong> 15</p>
+                <p><strong>Last Booking Date:</strong> March 10, 2025</p>
+                <p><strong>Preferred Destinations:</strong> Paris, Maldives, Thailand</p>
+                <p><strong>Reviews & Ratings Given:</strong> ⭐⭐⭐⭐☆ (4.5/5)</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+   
+   
+
+{% endblock %}

@@ -11,7 +11,7 @@
                 <a href="{% url 'profile' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
                     <i class="fas fa-user"></i> Account Details
                 </a>
-                <a href="#" class="list-group-item list-group-item-action">
+                <a href="{% url 'view_bookings' %}" class="list-group-item list-group-item-action">
                     <i class="fas fa-book"></i> Bookings
                 </a>
                 <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'wishlist' %}active{% endif %}">

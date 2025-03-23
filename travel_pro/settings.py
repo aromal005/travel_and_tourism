@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'user_app',
     'travel_agent',
     'common',
+    'admin_app',
 ]
 
 MIDDLEWARE = [
@@ -154,4 +155,6 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "161b8847e1d649a8e192ea20d332f1dc")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 #print("GEMINI_API_KEY:", GEMINI_API_KEY)
