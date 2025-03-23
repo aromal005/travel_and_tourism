@@ -1,10 +1,11 @@
+import json
 from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import get_user_model
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from travel_agent.models import TravelPackage, Itinerary
+from travel_agent.models import *
 import os
 from django.db.models import Count
 from django import template
@@ -13,11 +14,13 @@ from datetime import datetime, timedelta
 import requests
 from collections import defaultdict
 from travel_agent.models import Category
-from . models import Blog, Wishlist
-from common.models import CustomUser,UserProfile
+from . models import *
+from common.models import *
 from django.contrib.auth.decorators import login_required
 import google.generativeai as genai
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from datetime import datetime
 genai.configure(api_key=settings.GEMINI_API_KEY)
 
 CustomUser = get_user_model()
@@ -384,5 +387,39 @@ def edit_user_profile(request):
 
 def booking(request, package_id):
     package = get_object_or_404(TravelPackage, id=package_id) 
-    print(package) 
-    return render(request, 'user/booking.html', {'package': package})
+    itineraries = package.itineraries.all()
+    #print(package) 
+    return render(request, 'user/booking.html', {'package': package, "itineraries":itineraries})
+
+
+def store_bookings(request, package_id): 
+    if request.method == "POST":
+        user = request.user  # Get the logged-in user
+
+        package_id = request.POST.get("package_id")
+        travel_date = request.POST.get("travel_date")
+        num_adults = int(request.POST.get("num_adults", 1))
+        num_children = int(request.POST.get("num_children", 0))
+        total_amount = request.POST.get("total_amount")
+
+        total_travelers = num_adults + num_children  # Calculate total travelers
+
+        try:
+            package = TravelPackage.objects.get(id=package_id)
+
+            booking = Booking.objects.create(
+                user=user,  # Save logged-in user
+                travel_package=package,
+                travel_date=travel_date,
+                travelers_count=total_travelers,
+                total_price=total_amount,
+            )
+            return JsonResponse({"success": True})
+        except TravelPackage.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Package not found."})
+
+    return JsonResponse({"success": False, "error": "Invalid request."})
+
+def view_bookings(request):
+    bookings = Booking.objects.filter(user=request.user)
+    return render(request, 'user/view_bookings.html', {"bookings":bookings})

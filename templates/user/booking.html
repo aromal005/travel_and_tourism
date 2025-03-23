@@ -1,136 +1,254 @@
-    {% extends "user/base.html" %}
-    {% load static %}
+{% extends 'user/base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left Side (Scrollable) -->
+        <div class="col-md-8" style="max-height: 80vh; overflow-y: auto;">
+            <h2 class="fw-bold">{{ package.package_name }} package</h2>
+            <p>{{ package.duration }} days | {{ package.package_name }}</p>
 
-    {% block content %}
-    <div class="container mt-5">
-        <div class="card shadow-lg p-4">
-            <h2 class="text-center mb-4">Book Your Travel Package</h2>
+            {% if itineraries %}
+                <img src="{{ itineraries.0.image.url }}" class="img-fluid rounded mb-3" alt="Featured Itinerary">
+            {% endif %}
 
-            <!-- Package Details -->
-            <div class="border p-3 rounded mb-4 bg-light">
-                <h5>Package Details</h5>
-                <div class="row align-items-center">
-                    <!-- Left: Package Details -->
-                    <div class="col-md-7">
-                        <p><strong>Package Name:</strong> {{ package.package_name }} Package</p>
-                        <p><strong>Destination:</strong> {{ package.package_name }}</p>
-                        <p><strong>Duration:</strong> {{ package.duration }} days</p>
-                        <p><strong>Price:</strong> ₹{{ package.price }}</p>
+            <!-- Inclusions & Exclusions Section -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card bg-light p-3">
+                        <h4 class="fw-bold text-success">✅ Inclusions</h4>
+                        <ul class="list-unstyled">
+                            <li>✔ 01 Night Accommodation in Seminyak</li>
+                            <li>✔ 02 Nights Accommodation in Ubud</li>
+                            <li>✔ Daily breakfast at hotel</li>
+                            <li>✔ Transfer from DPS APT to Hotel</li>
+                            <li>✔ Sunset Tanah Lot Tour</li>
+                        </ul>
                     </div>
-            
-                    <!-- Right: Package Image (First Itinerary Image) -->
-                    <div class="col-md-5 text-center">
-                        {% with package.itineraries.first as itinerary %}
-                            {% if itinerary and itinerary.image %}
-                                <div class="image-container">
-                                    <img src="{{ itinerary.image.url }}" alt="{{ package.package_name }}" 
-                                        class="package-image img-fluid rounded shadow-lg">
-                                </div>
-                            {% else %}
-                                <p>No image available</p>
-                            {% endif %}
-                        {% endwith %}
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card bg-light p-3">
+                        <h4 class="fw-bold text-danger">❌ Exclusions</h4>
+                        <ul class="list-unstyled">
+                            <li>✖ Visa Fee (If applicable)</li>
+                            <li>✖ Travel Insurance</li>
+                            <li>✖ Tipping</li>
+                            <li>✖ Anything not mentioned in ‘Package Inclusions’</li>
+                            <li>✖ Personal expenses & extra meals</li>
+                        </ul>
                     </div>
                 </div>
             </div>
-            
 
-            <form method="POST" action="#">
-                {% csrf_token %}
+            <!-- Terms & Conditions Section -->
+            <div class="card shadow p-3 mt-3">
+                <h4 class="fw-bold text-primary">📜 Terms & Conditions</h4>
 
-                <!-- User Information -->
-                <div class="border p-3 rounded mb-4">
-                    <h5>User Information</h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="form-label">Full Name</label>
-                            <input type="text" name="full_name" class="form-control" value="{{ user.name }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
-                        </div>
-                    </div>
-                </div>
+                <h5 class="fw-bold mt-2">Travel Validity</h5>
+                <p>• Fixed travel dates.</p>
 
-                <!-- Booking Details -->
-                <div class="border p-3 rounded mb-4">
-                    <h5>Booking Details</h5>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label class="form-label">Number of Adults</label>
-                            <input type="number" name="num_adults" class="form-control" min="1" value="1" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Number of Children</label>
-                            <input type="number" name="num_children" class="form-control" min="0" value="0">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Special Requests</label>
-                            <input type="text" name="special_requests" class="form-control" placeholder="Any preferences?">
-                        </div>
-                    </div>
-                </div>
+                <h5 class="fw-bold mt-2">Easy Cancellation</h5>
+                <p>• D-45 or prior: 50% refund <br> • D-30: 75% charge <br> • D-15: 100% charge</p>
 
-                <!-- Payment Selection -->
-                <div class="border p-3 rounded mb-4">
-                    <h5>Payment Options</h5>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="payment_method" value="credit_card" required>
-                        <label class="form-check-label">Credit/Debit Card</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="payment_method" value="upi">
-                        <label class="form-check-label">UPI / Net Banking</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="payment_method" value="cash_on_arrival">
-                        <label class="form-check-label">Cash on Arrival</label>
-                    </div>
-                </div>
+                <h5 class="fw-bold mt-2">Guaranteed Dates</h5>
+                <p>• Travel dates are fixed and non-changeable.</p>
+            </div>
+        </div>
 
-                <!-- Confirm Button -->
-                <div class="text-center">
-                    <button type="submit" class="btn btn-primary btn-lg">
+        <!-- Right Side (Static) -->
+        <div class="col-md-4">
+            <div class="card shadow p-3">
+                <h4 class="fw-bold">Starting from</h4>
+                <h3 class="text-primary">₹{{ package.price }}</h3>
+                <div class="d-flex gap-4">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#enquiryModal">
+                        Enquire Now
+                    </button>
+                    <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#confirmBookingModal">
                         <i class="fas fa-check-circle"></i> Confirm Booking
                     </button>
                 </div>
-            </form>
+
+
+                <!-- Enquiry Modal -->
+<div class="modal fade" id="enquiryModal" tabindex="-1" role="dialog" aria-labelledby="enquiryModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="enquiryModalLabel">Want to Go For A Memorable Holiday?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="enquiryForm">
+                    <div class="form-group">
+                        <label for="packageName">Package Name</label>
+                        <input type="text" class="form-control" id="packageName" value="The Best Of {{ package.package_name}} Group Departure" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" class="form-control" id="name" placeholder="Your Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="mobile">Mobile No.</label>
+                        <input type="tel" class="form-control" id="mobile" placeholder="+91 Mobile No." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email ID</label>
+                        <input type="email" class="form-control" id="email" placeholder="Your E-Mail Address" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adults">Adults</label>
+                        <input type="number" class="form-control" id="adults" value="2" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="children">Children</label>
+                        <input type="number" class="form-control" id="children" value="0" min="0">
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Enquire Now</button>
+                </form>
+            </div>
         </div>
     </div>
+</div>
 
-    <style>
-        .card {
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h5 {
-            color: #0056b3;
-        }
-        .btn-primary {
-            background-color: #0056b3;
-            border: none;
-            padding: 10px 20px;
-            font-size: 18px;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-        .btn-primary:hover {
-            background-color: #00408a;
-        }
-        .image-container {
-            overflow: hidden; /* Ensures no part of the image goes outside */
-            display: inline-block;
-            border-radius: 10px; /* Optional: Makes corners rounded */
-        }
+<!-- Confirm Booking Modal -->
+<<!-- Confirm Booking Modal -->
+<div class="modal fade" id="confirmBookingModal" tabindex="-1" role="dialog" aria-labelledby="confirmBookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmBookingModalLabel">Confirm Your Booking</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="hidden" id="package_id" name="package_id" value="{{ package.id }}">
+                        <label for="bookingPackageName">Package Name</label>
+                        <input type="text" class="form-control" id="bookingPackageName" value="{{ package.package_name }}" readonly data-package-id="{{ package.id }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="travelDate">Travel Date</label>
+                        <input type="date" class="form-control" id="travelDate" name="travel_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="travelerName">Your Name</label>
+                        <input type="text" class="form-control" id="travelerName" name="traveler_name" value="{{ user.username }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="travelerEmail">Email Address</label>
+                        <input type="email" class="form-control" id="travelerEmail" name="traveler_email" value="{{ user.email }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="travelerPhone">Phone Number</label>
+                        <input type="tel" class="form-control" id="travelerPhone" name="traveler_phone" value="{{ user.phone }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="numAdults">Number of Adults</label>
+                        <input type="number" class="form-control" id="numAdults" name="num_adults" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="numChildren">Number of Children</label>
+                        <input type="number" class="form-control" id="numChildren" name="num_children" value="0" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="totalAmount">Total Amount (₹)</label>
+                        <input type="text" class="form-control" id="totalAmount" name="total_amount" value="{{ package.price }}" readonly>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Confirm Booking</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-        .package-image {
-            transition: transform 0.4s ease-in-out; /* Smooth zoom effect */
-        }
+<!-- modal for booking now -->
 
-        .package-image:hover {
-            transform: scale(1.1); /* Zoom in by 10% on hover */
-        }
-    </style>
-    {% endblock %}
+                <hr>
+                <p><strong>Duration:</strong> {{ package.duration }} days</p>
+                <p><strong>Places to Visit:</strong> {{ package.locations }}</p>
+                <h5 class="fw-bold">Package Includes:</h5>
+                <div class="d-flex justify-content-around">
+                    
+                    <span>🏨 Hotel</span>
+                    <span>🚍 Transfer</span>
+                    <span>🍽️ Meal</span>
+                </div>
+                <hr>
+                <h5 class="fw-bold">Need Help?</h5>
+                <p>📞 Call us: {{ package.travel_agent.phone |default:'-' }}</p>
+                <p>📧 Mail us: {{ package.travel_agent.email |default:'-' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('#enquiryForm').submit(function (event) {
+            event.preventDefault();
+
+            const enquiryData = {
+                packageName: $('#packageName').val(),
+                name: $('#name').val(),
+                mobile: $('#mobile').val(),
+                email: $('#email').val(),
+                adults: $('#adults').val(),
+                children: $('#children').val()
+            };
+
+            console.log('Enquiry Data:', enquiryData);
+            alert('Your enquiry has been sent successfully!');
+
+            $('#enquiryModal').modal('hide');
+        });
+    });
+    
+    </script>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("bookingForm").addEventListener("submit", function (event) {
+                console.log("modal activated");  // Debugging log to check if script runs
+                event.preventDefault();  // Prevent page reload
+        
+                let formData = new FormData(this);
+                let packageId = document.getElementById("package_id").value;  // Ensure this ID exists
+        
+                console.log("form activated");  // Debugging log to check if event fires
+        
+                fetch(`/store-bookings/${packageId}/`, {  
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+                    },
+                    credentials: "same-origin" // Ensures session authentication
+                })
+                .then(response => {
+                    console.log("Response received");  // Debugging log to check if fetch works
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Data:", data);  // Debugging log to check response data
+                    if (data.success) {
+                        alert("Booking successful!");
+                        location.reload();
+                    } else {
+                        alert("Error: " + data.error);
+                    }
+                })
+                .catch(error => console.error("Fetch error:", error));
+            });
+        });
+        
+        
+    </script>
+{% endblock %}
