@@ -1,0 +1,78 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .card-body {
+        min-width: 200px; /* Adjust based on your design */
+    }
+    
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user"></i> Account Details
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book"></i> Bookings
+                </a>
+                <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'wishlist' %}active{% endif %}">
+                    <i class="fas fa-heart"></i> Wishlists
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i> My Address
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt"></i> Coupons
+                </a>
+                <a href="{% url 'user_blog' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'user_blog' %}active{% endif %}">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Wishlist Content -->
+        <div class="col-md-9">
+
+            <h4>Your Coupons</h4>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Coupon Code</th>
+                                <th>Discount (%)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for coupon in request.user.coupons.all %}
+                            <tr>
+                                <td>{{ coupon.code }}</td>
+                                <td>{{ coupon.discount_percentage }}%</td>
+                                <td>{% if coupon.is_used %}Not Available{% else %}Available{% endif %}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" style="text-align: center;">No coupons available.</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+    
+                            
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

@@ -13,5 +13,11 @@ urlpatterns = [
     path('complaint/', views.complaint, name='complaint'),
     path('payment/', views.view_payment, name='payment'),
     path('agent-profile/', views.agent_profile, name='agent_profile'),
-     
+    path('edit-agent-profile/', views.edit_agent_profile, name='edit_agent_profile'),
+    path('update-fcm-token/', views.update_fcm_token, name='update_fcm_token'),
+    path("get-notifications/", views.get_notifications, name="get_notifications"),
+    path("send-fcm-notification/", views.send_fcm_notification, name="send_fcm_notification"),
+    # path("test-fcm-token-update/", views.test_fcm_token_update, name="test-fcm-token-update"),
+    path("mark-all-read/", views.mark_all_read, name="mark_all_read"),
+    path("send-push-notification/", views.send_push_notification, name="send_push_notification"),
 ]

@@ -20,7 +20,7 @@
                 <a href="#" class="list-group-item list-group-item-action">
                     <i class="fas fa-map-marker-alt"></i> My Address
                 </a>
-                <a href="#" class="list-group-item list-group-item-action">
+                <a href="{% url 'coupon' %}" class="list-group-item list-group-item-action">
                     <i class="fas fa-ticket-alt"></i> Coupons
                 </a>
                 <a href="{% url 'user_blog' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'user_blog' %}active{% endif %}">
@@ -110,7 +110,7 @@
                                     </tr>
                                     <tr>
                                         <th>Referral Code</th>
-                                        <td>{{ user.referral_code|default:'-' }}</td>
+                                        <td>{{ user.referral_code |default:'-' }}</td>
                                     </tr>                                  
                                 </tbody>
                             </table>

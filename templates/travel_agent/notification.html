@@ -1,0 +1,57 @@
+{% extends 'travel_agent/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4>Send Push Notification</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{% url 'send_push_notification' %}" id="notificationForm">
+                        {% csrf_token %}
+                        
+                        <!-- Title Field -->
+                        <div class="form-group">
+                            <label for="title">Notification Title</label>
+                            <input type="text" class="form-control" id="title" name="title" placeholder="Enter notification title" required>
+                            <small class="form-text text-muted">Title of the notification (e.g., Special Offer).</small>
+                        </div>
+
+                        <!-- Message Field -->
+                        <div class="form-group">
+                            <label for="message">Notification Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="4" placeholder="Enter your message here" required></textarea>
+                            <small class="form-text text-muted">Content of the notification (e.g., Discount on travel packages).</small>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Send Notification</button>
+                    </form>
+                </div>
+            </div>
+
+            {% if messages %}
+                <div class="mt-4">
+                    <div class="alert alert-success" role="alert">
+                        {% for message in messages %}
+                            <p>{{ message }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if error_messages %}
+                <div class="mt-4">
+                    <div class="alert alert-danger" role="alert">
+                        {% for error in error_messages %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

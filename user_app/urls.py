@@ -27,6 +27,10 @@ urlpatterns = [
     path('get_travel_alerts/', views.get_travel_alerts, name='get_travel_alerts'),
     path('edit-profile/', views.edit_user_profile, name='edit_user_profile'),
     path('booking/<int:package_id>/', views.booking, name='booking'),
-    path('store-bookings/<int:package_id>/', views.store_bookings, name='store_bookings'),
+    # path('store-bookings/<int:package_id>/', views.store_bookings, name='store_bookings'),
     path('view-bookings/', views.view_bookings, name='view_bookings'),
+    path("create-checkout-session/<int:package_id>/", views.create_checkout_session, name="create_checkout_session"),
+    path("payment/success/", views.success_view, name="payment_success"),
+    path("payment/cancel/", views.cancel_view, name="payment_cancel"),
+    path("coupon/", views.coupon_view, name="coupon"),
 ]

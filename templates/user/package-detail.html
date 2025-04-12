@@ -32,6 +32,12 @@
     padding: 15px;
 }
 
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 .info-section {
     background: #f1f1f1;
     padding: 15px;
@@ -81,7 +87,7 @@
 
     <h3 class="mb-3">Itinerary</h3>
     {% for itinerary in package.itineraries.all %}
-    <div class="card mb-3 itinerary-card">
+    <div class="card mb-3 itinerary-card mb-4">
         <div class="row g-0">
             <div class="col-md-4 img-container">
                 <img src="{{ itinerary.image.url }}" class="img-fluid rounded-start" alt="Day {{ itinerary.day_number }}">
@@ -97,7 +103,7 @@
     {% endfor %}
 
     <h3 class="mt-4">🌍 AI-Powered Smart Itinerary</h3>
-    <div class="card p-3 mb-4 ai-itinerary-card">
+    <div class="card p-3 mb-4 ai-itinerary-card mt-4">
         <p>Click the button below to generate a personalized itinerary based on real-time conditions.</p>
         <button id="generate_itinerary" class="btn btn-success">🔄 Generate AI Itinerary</button>
         <div id="ai_itinerary" class="mt-3">
@@ -162,7 +168,7 @@ $(document).ready(function() {
             url: "/generate_itinerary/",
             type: "GET",
             data: {
-                destination: "{{ package.package_name }}",
+                destination: "{{ package.destination }}",
                 days: "{{ package.duration }}"
             },
             success: function(response) {
@@ -187,14 +193,14 @@ $(document).ready(function() {
         });
     });
 
-    $.get("/get_weather/", { destination: "{{ package.package_name }}" }, function(data) {
+    $.get("/get_weather/", { destination: "{{ package.destination }}" }, function(data) {
         $("#weather_info").html(`<p><strong>${data.weather}</strong>, ${data.temperature}°C</p>`);
     });
 
   
 });
 
-$.get("/get_travel_news/", { destination: "{{ package.package_name }}" })
+$.get("/get_travel_news/", { destination: "{{ package.destination }}" })
   .done(function(data) {
       let newsHtml = "";
       if (data.news.length === 0) {
@@ -215,7 +221,7 @@ $.get("/get_travel_news/", { destination: "{{ package.package_name }}" })
       $("#travel_news").html("<p class='text-danger'>Failed to fetch travel news.</p>");
   });
 
-  $.get("/get_travel_alerts/", { destination: "{{ package.package_name }}" })
+  $.get("/get_travel_alerts/", { destination: "{{ package.destination }}" })
   .done(function(data) {
       let alertsHtml = "";
       if (data.alerts.length === 0) {

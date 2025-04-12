@@ -233,6 +233,127 @@
 
     <!-- Template Javascript -->
     <script src="js/main.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging.js";
+    
+        document.addEventListener("DOMContentLoaded", async function () {
+            // 🔹 Firebase Config
+            const firebaseConfig = {
+                apiKey: "AIzaSyDtt2bdy_57SObQV9RBb50lpMqV8zBusAI",
+                authDomain: "travel-tourism-d6c1f.firebaseapp.com",
+                projectId: "travel-tourism-d6c1f",
+                storageBucket: "travel-tourism-d6c1f.appspot.com",
+                messagingSenderId: "890365706860",
+                appId: "1:890365706860:web:3204d6075ff0377e2f8e49",
+                measurementId: "G-ZWJ6LQP4DM"
+            };
+    
+            // 🔹 Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const messaging = getMessaging(app);
+    
+            // 🔹 Register Service Worker
+            async function registerServiceWorker() {
+                if ("serviceWorker" in navigator) {
+                    try {
+                        const registration = await navigator.serviceWorker.register("/static/firebase-messaging-sw.js");
+                        console.log("✅ Service Worker Registered:", registration.scope);
+                        return registration;
+                    } catch (error) {
+                        console.error("❌ Service Worker Registration Failed:", error);
+                        return null;
+                    }
+                } else {
+                    console.error("❌ Service Workers are not supported in this browser.");
+                    return null;
+                }
+            }
+    
+            // 🔹 Request Notification Permission
+            async function requestNotificationPermission() {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === "granted") {
+                        console.log("✅ Notification permission granted.");
+                        return true;
+                    } else {
+                        console.log("⚠️ Notification permission denied.");
+                        return false;
+                    }
+                } catch (error) {
+                    console.error("❌ Error requesting notification permission:", error);
+                    return false;
+                }
+            }
+    
+            // 🔹 Request FCM Token
+            async function requestFCMToken() {
+                const swRegistration = await registerServiceWorker();
+                if (!swRegistration) return;
+    
+                const permissionGranted = await requestNotificationPermission();
+                if (!permissionGranted) return;
+    
+                try {
+                    const token = await getToken(messaging, {
+                        vapidKey: "BOPq6Jns8mCYNK3LOqbXNVhFz1K5Y_dhKyigGg-JrcaTbW5oFMWF4uuFBJ4CtzAfVBHuSFXwruTZIH59Hw6d6KU",
+                        serviceWorkerRegistration: swRegistration // Attach the service worker
+                    });
+    
+                    if (token) {
+                        console.log("📲 FCM Token:", token);
+                        sendTokenToServer(token);
+                    } else {
+                        console.log("⚠️ No FCM Token received.");
+                    }
+                } catch (error) {
+                    console.error("❌ Error getting token:", error);
+                }
+            }
+    
+            // 🔹 Send FCM Token to Django Backend
+            function sendTokenToServer(token) {
+                console.log("Attempting to send token to server:", token);
+    
+                fetch("/travel_agent/update-fcm-token/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken() // Include CSRF token here
+                    },
+                    body: JSON.stringify({ fcm_token: token }) // Send as JSON
+                })
+                .then(response => response.json())
+                .then(data => console.log("✅ Server Response:", data))
+                .catch(error => console.error("❌ Error sending FCM token:", error));
+            }
+    
+            // 🔹 Get CSRF Token (Better Method)
+            function getCSRFToken() {
+                return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || "";
+            }
+    
+            // 🔹 Handle Incoming Notifications
+            onMessage(messaging, (payload) => {
+                console.log("📩 New Notification:", payload);
+    
+                if (Notification.permission === "granted") {
+                    new Notification(payload.notification.title, {
+                        body: payload.notification.body,
+                        icon: "/static/images/notification-icon.png"
+                    });
+                } else {
+                    alert(`New Notification: ${payload.notification.title}`);
+                }
+            });
+    
+            // 🔹 Request FCM Token on Page Load
+            requestFCMToken();
+        });
+    </script>
+    
 </body>
 
 </html>

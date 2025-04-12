@@ -1,1 +1,51 @@
-<h1>Payment page</h1>
+{% extends "travel_agent/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Payment Transactions</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Package</th>
+                    <th>Amount</th>
+                    <th>Payment Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for payment in payments %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ payment.user.username }}</td>
+                    <td>{{ payment.travel_package.package_name }}</td>
+                    <td>₹{{ payment.total_price }}</td>
+                    <td>{{ payment.booking_date|date:"d M Y, h:i A" }}</td>
+                    <td>
+                        {% if payment.payment_status == "pending" %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif payment.payment_status == "paid" %}
+                            <span class="badge bg-success">Paid</span>
+                        {% else %}
+                            <span class="badge bg-danger">Failed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="#" class="btn btn-info btn-sm">View</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">No payment records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock content %}

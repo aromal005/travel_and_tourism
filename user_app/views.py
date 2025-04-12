@@ -21,7 +21,12 @@ import google.generativeai as genai
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime
+from travel_agent . views import send_fcm_notification
+import stripe
+from django.core.mail import send_mail
+from . tasks import send_booking_confirmation_email
 genai.configure(api_key=settings.GEMINI_API_KEY)
+stripe.api_key = settings.STRIPE_SECRET_KEY  # Load API key from settings
 
 CustomUser = get_user_model()
 
@@ -388,38 +393,221 @@ def edit_user_profile(request):
 def booking(request, package_id):
     package = get_object_or_404(TravelPackage, id=package_id) 
     itineraries = package.itineraries.all()
+    coupons = Coupon.objects.filter(user=request.user, is_used=False)
     #print(package) 
-    return render(request, 'user/booking.html', {'package': package, "itineraries":itineraries})
+    return render(request, 'user/booking.html', {'package': package, "itineraries":itineraries, "coupons":coupons})
 
 
-def store_bookings(request, package_id): 
-    if request.method == "POST":
-        user = request.user  # Get the logged-in user
+# def store_bookings(request, package_id): 
+#     if request.method == "POST":
+#         user = request.user  # Get the logged-in user
 
-        package_id = request.POST.get("package_id")
-        travel_date = request.POST.get("travel_date")
-        num_adults = int(request.POST.get("num_adults", 1))
-        num_children = int(request.POST.get("num_children", 0))
-        total_amount = request.POST.get("total_amount")
+#         package_id = request.POST.get("package_id")
+#         travel_date = request.POST.get("travel_date")
+#         num_adults = int(request.POST.get("num_adults", 1))
+#         num_children = int(request.POST.get("num_children", 0))
+#         total_amount = request.POST.get("total_amount")
 
-        total_travelers = num_adults + num_children  # Calculate total travelers
+#         total_travelers = num_adults + num_children  # Calculate total travelers
 
-        try:
-            package = TravelPackage.objects.get(id=package_id)
+#         try:
+#             package = TravelPackage.objects.get(id=package_id)
 
-            booking = Booking.objects.create(
-                user=user,  # Save logged-in user
-                travel_package=package,
-                travel_date=travel_date,
-                travelers_count=total_travelers,
-                total_price=total_amount,
-            )
-            return JsonResponse({"success": True})
-        except TravelPackage.DoesNotExist:
-            return JsonResponse({"success": False, "error": "Package not found."})
+#             booking = Booking.objects.create(
+#                 user=user,  # Save logged-in user
+#                 travel_package=package,
+#                 travel_date=travel_date,
+#                 travelers_count=total_travelers,
+#                 total_price=total_amount,
+#             )
+#             return JsonResponse({"success": True})
+#         except TravelPackage.DoesNotExist:
+#             return JsonResponse({"success": False, "error": "Package not found."})
 
-    return JsonResponse({"success": False, "error": "Invalid request."})
+#     return JsonResponse({"success": False, "error": "Invalid request."})
 
 def view_bookings(request):
-    bookings = Booking.objects.filter(user=request.user)
+    bookings = Booking.objects.filter(user=request.user).order_by('-booking_date')
     return render(request, 'user/view_bookings.html', {"bookings":bookings})
+
+
+@csrf_exempt
+def create_checkout_session(request, package_id):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            print("Parsed JSON data:", data)
+
+            travel_date = data.get("travel_date")
+            traveler_email = data.get("traveler_email")
+            total_amount = data.get("total_amount")
+            coupon_code = data.get("coupon_code")
+            traveler_name = data.get("traveler_name")
+            traveler_phone = data.get("traveler_phone")
+            num_adults = data.get("num_adults")
+            num_children = data.get("num_children")
+
+            if not travel_date:
+                return JsonResponse({"error": "Travel date is required"}, status=400)
+
+            if not total_amount:
+                return JsonResponse({"error": "Total amount is required"}, status=400)
+
+            # Validate date format
+            try:
+                datetime.strptime(travel_date, "%Y-%m-%d")
+            except ValueError:
+                return JsonResponse({"error": "Invalid date format. Expected YYYY-MM-DD"}, status=400)
+
+            # Validate total_amount
+            try:
+                total_amount = float(total_amount)
+                if total_amount <= 0:
+                    return JsonResponse({"error": "Invalid total amount"}, status=400)
+            except (TypeError, ValueError):
+                return JsonResponse({"error": "Total amount must be a valid number"}, status=400)
+
+            package = get_object_or_404(TravelPackage, id=package_id)
+
+            # Validate coupon (for security)
+            if coupon_code:
+                try:
+                    coupon = Coupon.objects.get(user=request.user, code=coupon_code, is_used=False)
+                    discount = float(coupon.discount_percentage)  # Convert to float
+                    package_price = float(package.price)  # Convert Decimal to float
+                    expected_total = package_price * (100 - discount) / 100
+                    if abs(total_amount - expected_total) > 0.01:
+                        return JsonResponse({"error": "Total amount does not match coupon discount"}, status=400)
+                except Coupon.DoesNotExist:
+                    return JsonResponse({"error": "Invalid or used coupon"}, status=400)
+            else:
+                # No coupon; verify total_amount matches package.price
+                package_price = float(package.price)  # Convert Decimal to float
+                if abs(total_amount - package_price) > 0.01:
+                    return JsonResponse({"error": "Total amount does not match package price"}, status=400)
+
+            # Use total_amount from form for Stripe
+            amount_in_cents = int(total_amount * 100)
+            session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=[
+                    {
+                        "price_data": {
+                            "currency": "inr",  # INR for ₹
+                            "product_data": {"name": package.package_name},
+                            "unit_amount": amount_in_cents,
+                        },
+                        "quantity": 1,
+                    }
+                ],
+                mode="payment",
+                success_url=(
+                    f"http://127.0.0.1:8000/payment/success/"
+                    f"?package_id={package.id}"
+                    f"&user_id={request.user.id}"
+                    f"&price={total_amount}"  # Use total_amount
+                    f"&travel_date={travel_date}"
+                    f"&traveler_email={traveler_email or ''}"
+                    f"&traveler_name={traveler_name or ''}"
+                    f"&traveler_phone={traveler_phone or ''}"
+                    f"&num_adults={num_adults or 0}"
+                    f"&num_children={num_children or 0}"
+                    f"&coupon_code={coupon_code or ''}"
+                ),
+                cancel_url="http://127.0.0.1:8000/payment/cancel/",
+            )
+            return JsonResponse({"id": session.id})
+
+        except json.JSONDecodeError as e:
+            print("JSON decode error:", str(e))
+            return JsonResponse({"error": "Invalid JSON data"}, status=400)
+        except TravelPackage.DoesNotExist:
+            return JsonResponse({"error": "Package not found"}, status=404)
+        except stripe.error.StripeError as e:
+            print("Stripe error:", str(e))
+            return JsonResponse({"error": str(e)}, status=400)
+        except Exception as e:
+            print("Unexpected error:", str(e))
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+from datetime import datetime
+from decimal import Decimal
+
+def success_view(request):
+    package_id = request.GET.get("package_id")
+    user_id = request.GET.get("user_id")
+    price = request.GET.get("price")
+    travel_date = request.GET.get("travel_date")
+    notification_email = request.GET.get("traveler_email")
+    print(f"Email of traveler: {notification_email}")
+
+    # Validate price
+    try:
+        price = Decimal(price)
+    except (ValueError, TypeError):
+        return JsonResponse({"error": "Invalid price format"}, status=400)
+
+    # Validate travel_date
+    if not travel_date or travel_date.lower() == "none":
+        return JsonResponse({"error": "Invalid travel date"}, status=400)
+    
+    try:
+        travel_date = datetime.strptime(travel_date, "%Y-%m-%d").date()
+    except ValueError:
+        return JsonResponse({"error": "Invalid date format. Expected YYYY-MM-DD"}, status=400)
+
+    try:
+        package = TravelPackage.objects.get(id=package_id)
+        user = CustomUser.objects.get(id=user_id)
+
+        # Save booking
+        booking = Booking.objects.create(
+            user=user,
+            travel_package=package,
+            travel_date=travel_date,  # Now correctly validated
+            travelers_count=1,
+            total_price=price,
+            status="Confirmed"
+        )
+
+        travel_agent_profile = package.travel_agent.travelagentprofile
+        send_fcm_notification(travel_agent_profile, booking)
+
+        recipient_email = notification_email if notification_email else user.email
+
+        # Send email to user asynchronously
+        subject = 'Booking Confirmation'
+        message = (
+            f"Dear Traveler,\n\n"
+            f"Your booking has been confirmed!\n"
+            f"Booking ID: {booking.id}\n"
+            f"Package: {package.package_name}\n"
+            f"Travel Date: {travel_date}\n"
+            f"Total Price: ${price}\n\n"
+            f"Thank you for choosing us!\n"
+            f"Travel Pro Team"
+        )
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient_email],  # Email of the user who made the booking
+            fail_silently=True,  # Set to False for debugging if needed
+        )
+
+        return render(request, "user/success.html", {"package": package})
+
+    except (TravelPackage.DoesNotExist, CustomUser.DoesNotExist):
+        return JsonResponse({"error": "Invalid booking details"}, status=400)
+
+
+def cancel_view(request):
+    return render(request, "payment_cancel.html")
+
+def coupon_view(request):
+    # coupons = Coupon.objects.filter(user=request.user)  {"coupons":coupons}
+    return render(request, 'user/coupon.html')
