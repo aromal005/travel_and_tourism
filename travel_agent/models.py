@@ -52,3 +52,27 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.travel_agent.user.username}"
+    
+class PackageRating(models.Model):
+    travel_package = models.ForeignKey(
+        TravelPackage,
+        on_delete=models.CASCADE,
+        related_name='ratings'
+    )
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='package_ratings'
+    )
+    rating = models.PositiveIntegerField(
+        choices=((1, '1'), (2, '2'), (3, '3'), (4, '4'), (5, '5')),
+        help_text="Rating from 1 to 5 stars"
+    )
+    feedback = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('travel_package', 'user')  # Ensures one rating per user per package
+
+    def __str__(self):
+        return f"{self.rating} stars for {self.travel_package} by {self.user}"

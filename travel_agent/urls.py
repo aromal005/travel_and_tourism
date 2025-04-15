@@ -17,7 +17,20 @@ urlpatterns = [
     path('update-fcm-token/', views.update_fcm_token, name='update_fcm_token'),
     path("get-notifications/", views.get_notifications, name="get_notifications"),
     path("send-fcm-notification/", views.send_fcm_notification, name="send_fcm_notification"),
+
     # path("test-fcm-token-update/", views.test_fcm_token_update, name="test-fcm-token-update"),
     path("mark-all-read/", views.mark_all_read, name="mark_all_read"),
     path("send-push-notification/", views.send_push_notification, name="send_push_notification"),
+
+    # UPGRADE TO PRO
+    path("upgrade-to-pro/", views.upgrade_to_pro, name="upgrade_to_pro"),
+    path('upgrade/checkout/', views.create_checkout_session, name='create_checkout_session'),
+    path('upgrade/success/<int:user_id>/', views.upgrade_success, name='upgrade_success'),
+    path('upgrade/cancel/', views.upgrade_cancel, name='upgrade_cancel'),
+
+    path('customer-insights/<int:user_id>/', views.customer_insights, name='customer_insights'),
+    path('customers/', views.customer_list, name='customer_list'),
+
+    path('bookings/approve/<int:booking_id>/', views.approve_booking, name='approve_booking'),
+    path('bookings/cancel/<int:booking_id>/', views.cancel_booking, name='cancel_booking'),
 ]

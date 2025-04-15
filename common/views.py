@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from .forms import UserRegistrationForm, TravelAgentRegistrationForm
 from user_app.views import home
 from .models import CustomUser, TravelAgentProfile
+from django.contrib import messages
 
 
 User = get_user_model()
@@ -52,13 +53,17 @@ def login_view(request):
         user = authenticate(request, email=email, password=password)
         if user:
             login(request, user)
+            messages.success(request, f"Welcome back, {user.email}! You have successfully logged in.")
             
             if user.user_type == "admin":
                 return redirect("admin_dashboard")
+
             elif user.user_type == "travel_agent":
                 return redirect("travel_agent_home")
             else:
                 return redirect("home")
+        else:
+            messages.error(request, "Invalid email or password. Please try again.")
 
     return render(request, "common/login.html")
 

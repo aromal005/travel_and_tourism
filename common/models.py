@@ -73,6 +73,10 @@ class TravelAgentProfile(models.Model):
     profile_picture = models.ImageField(upload_to='profile_images/', blank=True, null=True)
     fcm_token = models.CharField(max_length=255, blank=True, null=True)
 
+    # Subscription details
+    is_pro = models.BooleanField(default=False)
+    pro_expiry_date = models.DateField(null=True, blank=True)
+
     def __str__(self):
         return f"{self.user.username} - {self.travel_company_name}"
 

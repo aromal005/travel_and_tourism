@@ -26,6 +26,9 @@
             padding-top: 60px;
             position: fixed;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            overflow-y: auto; /* Enable vertical scrolling */
+            top: 0;
+            bottom: 0;
         }
         #sidebar a {
             color: white;
@@ -107,9 +110,44 @@
             bottom: 0;
             left: 0;
         }
+
+    
+            /* Existing styles unchanged */
+           /* Pro Badge */
+    .pro-badge {
+        display: inline-block;
+        background: linear-gradient(45deg, #ffc107, #ffca2c); /* Gold gradient */
+        color: #212529; /* Dark text for contrast */
+        font-size: 12px;
+        font-weight: 600; /* Slightly bolder */
+        padding: 5px 10px; /* Slightly larger for prominence */
+        border-radius: 20px; /* Softer, pill-like shape */
+        margin-left: 10px;
+        vertical-align: middle;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 8px rgba(255, 193, 7, 0.3); /* Subtle glow */
+        text-transform: uppercase; /* Makes it stand out */
+        letter-spacing: 0.5px; /* Refined spacing */
+        transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth animation */
+    }
+    .pro-badge:hover {
+        transform: scale(1.05); /* Slight zoom on hover */
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), 0 0 12px rgba(255, 193, 7, 0.5); /* Enhanced glow */
+    }
+
+    /* Messages */
+    .messages-container {
+        margin-top: 60px; /* Matches navbar height */
+        margin-left: 260px; /* Matches sidebar width */
+        width: calc(100% - 260px);
+        z-index: 999; /* Below navbar (z-index: 1000) */
+        position: fixed;
+        top: 0;
+    }
+        
         
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-dark">
         <!--<span class="navbar-brand">Travel Agent Dashboard</span>-->
@@ -151,6 +189,9 @@
 
 
     <div id="sidebar">
+        {% if request.user.is_authenticated and request.user.travelagentprofile.is_pro %}
+                <span class="pro-badge">Pro</span>
+            {% endif %}
         <h2 class="text-center py-3">Agent Dashboard</h2>
         <a href="{% url 'travel_agent_home' %}"><i class="fas fa-home"></i> Dashboard</a>
         <a href="{% url 'create_package' %}"><i class="fas fa-box"></i> Create Packages</a>
@@ -158,10 +199,31 @@
         <a href="{% url 'view_booking' %}"><i class="fas fa-calendar-check"></i> View Bookings</a>
         <a href="{% url 'category' %}"><i class="fas fa-layer-group"></i> Create Categories</a>
         <a href="{% url 'payment' %}"><i class="fas fa-shopping-cart"></i> Orders & Payments</a>
+        <a href="{% url 'customer_list' %}"><i class="fas fa-shopping-cart"></i> Customer List</a>
+        
+        {% if request.user.is_authenticated and not request.user.travelagentprofile.is_pro %}
+            <a href="{% url 'upgrade_to_pro' %}"><i class="fas fa-crown"></i> Upgrade to Pro</a>
+        {% endif %}
         <a href="{% url 'complaint' %}"><i class="fas fa-comments"></i> Complaints & Reviews</a>
-        <a href="{% url 'send_push_notification' %}"><i class="fas fa-comments"></i> Notification form</a>
+        {% if request.user.is_authenticated and request.user.travelagentprofile.is_pro %}
+        <a href="{% url 'send_push_notification' %}"><i class="fas fa-comments"></i> Notification form</a> 
+    {% endif %}
     </div>
 
+    <!-- Messages display -->
+    {% if messages %}
+    <div class="messages-container">
+        <div class="container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
     <div id="main-content">
         {% block content %}
         {% endblock content %}

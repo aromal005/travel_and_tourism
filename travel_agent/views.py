@@ -1,5 +1,8 @@
-from django.http import JsonResponse
+from decimal import Decimal
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render,redirect
+from django.urls import reverse
+import stripe
 from . models import *
 from django.contrib import messages  # Import Django messages
 from django.contrib.auth.decorators import login_required
@@ -14,6 +17,8 @@ from firebase_admin import messaging
 from .utils import *
 from django.utils.dateparse import parse_date
 from django.db.models import Q
+from datetime import date, timedelta
+from admin_app.models import *
 
 def travel_agent_register(request):
     return render(request, 'travel_agent/dashboard.html')
@@ -308,11 +313,14 @@ def get_notifications(request):
 #     response = update_fcm_token(request)
 #     return JsonResponse({"message": "FCM Token Update Test", "response": response.content.decode()})
 
-@login_required
 def mark_all_read(request):
     if request.method == "POST":
-        Notification.objects.filter(user=request.user, read=False).update(read=True)
-        return JsonResponse({"message": "All notifications marked as read."}, status=200)
+        try:
+            travel_agent_profile = TravelAgentProfile.objects.get(user=request.user)
+            Notification.objects.filter(travel_agent=travel_agent_profile, is_read=False).update(is_read=True)
+            return JsonResponse({"message": "All notifications marked as read."}, status=200)
+        except TravelAgentProfile.DoesNotExist:
+            return JsonResponse({"error": "Travel agent profile not found"}, status=404)
     
     return JsonResponse({"error": "Invalid request"}, status=400)
 
@@ -345,3 +353,132 @@ def send_push_notification(request):
         return redirect('send_push_notification')  # Redirect to the notification page
 
     return render(request, 'travel_agent/notification.html')
+
+#UPGRADE TO PRO
+def upgrade_to_pro(request):
+    return render(request, 'travel_agent/upgrade_to_pro.html')
+
+stripe.api_key = settings.STRIPE_SECRET_KEY 
+
+@login_required
+def create_checkout_session(request):
+    success_url = request.build_absolute_uri(
+        reverse('upgrade_success', kwargs={'user_id': request.user.id})
+    )
+    
+    session = stripe.checkout.Session.create(
+        payment_method_types=['card'],
+        customer_email=request.user.email,
+        line_items=[{
+            'price_data': {
+                'currency': 'usd',
+                'product_data': {
+                    'name': 'Pro Subscription - Travel Agent',
+                },
+                'unit_amount': 2900,  # $29.00
+                'recurring': {
+                    'interval': 'month',
+                },
+            },
+            'quantity': 1,
+        }],
+        mode='subscription',
+        success_url=success_url,
+        cancel_url=request.build_absolute_uri('/travel-agent/upgrade/cancel/'),
+    )
+    return redirect(session.url)
+
+
+def upgrade_success(request, user_id):
+    user = CustomUser.objects.get(id=user_id)
+    profile = TravelAgentProfile.objects.get(user=user)
+    profile.is_pro = True
+    profile.pro_expiry_date = date.today() + timedelta(days=30)
+    profile.save()
+
+    # Calculate and save commission for admin
+    commission_amount = Decimal('29.00')  # Fixed $10 for pro upgrade
+    admin_user = CustomUser.objects.filter(user_type='admin').first()  # Get first admin
+    if admin_user:
+        Commission.objects.create(
+            admin=admin_user,
+            source='pro_upgrade',
+            amount=commission_amount,
+            travel_agent=user
+        )
+
+    if profile.fcm_token:
+            messaging.send(messaging.Message(
+                notification=messaging.Notification(
+                    title="Welcome to Pro!",
+                    body="Enjoy exclusive features as a pro user.",
+                ),
+                token=profile.fcm_token,
+            ))
+    return render(request, 'travel_agent/upgrade_success.html')
+
+
+def upgrade_cancel(request):
+    return render(request, 'travel_agent/upgrade_cancel.html')
+
+def approve_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if booking.status == 'pending':
+        booking.status = 'confirmed'
+        booking.save()
+        messages.success(request, 'Booking has been approved successfully.')
+    return redirect('view_booking')
+
+def cancel_booking(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    if booking.status == 'pending':
+        try:
+            # Fetch the user and total_price
+            user = booking.user
+            refund_amount = booking.total_price
+            print(refund_amount)
+
+            # Update the user's wallet
+            wallet, created = Wallet.objects.get_or_create(user=user)
+            wallet.balance += refund_amount
+            wallet.save()
+
+            # Update booking status
+            booking.status = 'cancelled'
+            booking.save()
+
+            messages.success(request, f'Booking cancelled successfully. ₹{refund_amount} refunded to {user.username}\'s wallet.')
+        except Exception as e:
+            messages.error(request, f'Error cancelling booking: {str(e)}')
+    else:
+        messages.error(request, 'Only pending bookings can be cancelled.')
+    return redirect('view_booking')
+
+@login_required
+def customer_insights(request, user_id):
+    if not request.user.travelagentprofile.is_pro:
+        return redirect('travel_agent_home')
+    try:
+        customer = CustomUser.objects.get(id=user_id)
+        bookings = Booking.objects.filter(
+            travel_package__travel_agent=request.user,
+            user=customer
+        ).order_by('-booking_date')
+        preferences = getattr(customer, 'preferences', 'No preferences recorded')  # Placeholder
+        context = {
+            'customer': customer,
+            'bookings': bookings,
+            'preferences': preferences,
+        }
+        return render(request, 'travel_agent/customer_insights.html', context)
+    except CustomUser.DoesNotExist:
+        raise Http404("Customer not found")
+
+@login_required
+def customer_list(request):
+    if not request.user.travelagentprofile.is_pro:
+        return redirect('travel_agent_home')
+    customers = CustomUser.objects.filter(
+        bookings__travel_package__travel_agent=request.user
+    ).exclude(id=request.user.id).distinct()
+    return render(request, 'travel_agent/customer_list.html', {'customers': customers})

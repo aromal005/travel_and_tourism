@@ -1,0 +1,100 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .card-body {
+        min-width: 200px;
+    }
+    .complaint-card {
+        margin-bottom: 1.5rem;
+    }
+    .complaint-date {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+    .complaint-message {
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .admin-response {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 5px;
+        margin-top: 1rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user"></i> Account Details
+                </a>
+                <a href="{% url 'view_bookings' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book"></i> Bookings
+                </a>
+                <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'wishlist' %}active{% endif %}">
+                    <i class="fas fa-heart"></i> Wishlists
+                </a>
+                <a href="{% url 'user_complaint_view' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i> My Address
+                </a>
+                <a href="{% url 'coupon' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt"></i> Coupons
+                </a>
+                <a href="{% url 'wallet' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'wallet' %}active{% endif %}">
+                    <i class="fas fa-wallet"></i> My Wallet
+                </a>
+                <a href="{% url 'user_blog' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'user_blog' %}active{% endif %}">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a href="" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'complaints' %}active{% endif %}">
+                    <i class="fas fa-exclamation-circle"></i> Complaints
+                </a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Complaints Content -->
+        <div class="col-md-9">
+            <h4>Your Complaints</h4>
+            <div id="complaintMessages"></div>
+            {% if complaints %}
+                {% for complaint in complaints %}
+                    <div class="card complaint-card">
+                        <div class="card-body">
+                            <p class="complaint-date">Submitted on: {{ complaint.created_at|date:"F d, Y H:i" }}</p>
+                            <p class="complaint-message"><strong>Your Complaint:</strong> {{ complaint.message }}</p>
+                            {% if complaint.response %}
+                                <div class="admin-response">
+                                    <p><strong>Admin Response:</strong> {{ complaint.response }}</p>
+                                    <p class="complaint-date">Responded on: {{ complaint.response_timestamp|date:"F d, Y H:i" }}</p>
+                                </div>
+                            {% else %}
+                                <p class="text-muted">No response from admin yet.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body">
+                        <p class="text-muted">You have not registered any complaints.</p>
+                    </div>
+                </div>
+            {% endif %}
+            <!-- Button to Open Complaint Modal -->
+            <a href="{% url 'complaint_register' %}"><button type="button" class="btn btn-primary mt-3">
+                Register New Complaint
+            </button></div></a>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
