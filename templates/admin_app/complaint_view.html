@@ -1,0 +1,146 @@
+{% extends 'admin_app/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content p-4" style="padding-top: 100px; margin-top: 60px;"></div>
+<div class="container-fluid">
+    <h1 class="mb-4">Complaints</h1>
+    
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'success' %}success{% else %}danger{% endif %} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Complaints Table -->
+   
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
+                        <th>Message</th>
+                        <th>File</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for complaint in complaints %}
+                    <tr>
+                        <td>{{ complaint.id }}</td>
+                        <td>{{ complaint.name }}</td>
+                        <td>{{ complaint.email }}</td>
+                        <td>{{ complaint.subject }}</td>
+                        <td>{{ complaint.message|truncatewords:10 }}</td>
+                        <td>
+                            {% if complaint.file %}
+                            <a href="{{ complaint.file.url }}" target="_blank">View</a>
+                            {% else %}
+                            None
+                            {% endif %}
+                        </td>
+                        <td>{{ complaint.created_at|date:"F d, Y H:i" }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm modal-open-btn" data-modal-id="messageModal{{ complaint.id }}">
+                                Send Message
+                            </button>
+                        </td>
+                    </tr>
+                    <!-- Message Modal -->
+                    <div class="modal fade" id="messageModal{{ complaint.id }}" tabindex="-1" aria-labelledby="messageModalLabel{{ complaint.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content glass-effect">
+                                <div class="modal-header bg-primary text-white">
+                                    <h5 class="modal-title" id="messageModalLabel{{ complaint.id }}">Send Message to {{ complaint.name }}</h5>
+                                    <button type="button" class="btn-close modal-close-btn" data-modal-id="messageModal{{ complaint.id }}" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="POST" action="{% url 'send_message' %}" class="message-form">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="complaint_id" value="{{ complaint.id }}">
+                                        <div class="mb-3">
+                                            <label for="message{{ complaint.id }}" class="form-label">Message</label>
+                                            <textarea class="form-control message-textarea" id="message{{ complaint.id }}" name="message" rows="4" placeholder="Type your message here..." required></textarea>
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="submit" class="btn btn-primary">Send</button>
+                                            <button type="button" class="btn btn-secondary modal-close-btn" data-modal-id="messageModal{{ complaint.id }}">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">No complaints found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+<!-- JavaScript for Modal Control -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Open modal
+    document.querySelectorAll('.modal-open-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-modal-id');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('show');
+                modal.style.display = 'block';
+                modal.setAttribute('aria-hidden', 'false');
+                modal.removeAttribute('aria-modal');
+                // Ensure textarea is visible
+                const textarea = modal.querySelector('.message-textarea');
+                if (textarea) {
+                    textarea.style.display = 'block';
+                    textarea.style.visibility = 'visible';
+                }
+            }
+        });
+    });
+
+    // Close modal
+    document.querySelectorAll('.modal-close-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const modalId = this.getAttribute('data-modal-id');
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }
+        });
+    });
+});
+</script>
+
+<style>
+/* Ensure modal and textarea visibility */
+.modal.fade.show {
+    display: block !important;
+    visibility: visible !important;
+}
+.modal-dialog {
+    pointer-events: auto !important;
+}
+.message-textarea {
+    display: block !important;
+    visibility: visible !important;
+    min-height: 100px !important;
+}
+</style>
+{% endblock content %}

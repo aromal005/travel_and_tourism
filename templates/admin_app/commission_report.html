@@ -1,0 +1,122 @@
+{% extends 'admin_app/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .commission-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .commission-card h4 {
+        color: #007bff;
+    }
+    .summary-box {
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .summary-box h6 {
+        margin-bottom: 10px;
+        color: #555;
+    }
+    .summary-box p {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    .table th {
+        background: #007bff;
+        color: #fff;
+    }
+    .no-data {
+        text-align: center;
+        color: #888;
+        padding: 20px;
+    }
+</style>
+
+<div class="content p-4" style="padding-top: 100px; margin-top: 60px;">
+    <h2 class="mb-4">Commission Report</h2>
+
+    <!-- Summary Section -->
+    <div class="commission-card">
+        <h4>Commission Summary</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="summary-box">
+                    <h6>Total Commissions</h6>
+                    <p>₹{{ summary.total|floatformat:2 }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-box">
+                    <h6>Booking Commissions</h6>
+                    <p>₹{{ summary.booking_total|floatformat:2 }}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="summary-box">
+                    <h6>Pro Upgrade Commissions</h6>
+                    <p>₹{{ summary.pro_upgrade_total|floatformat:2 }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Commission Table -->
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Commission Details</h4>
+            {% if commissions %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Source</th>
+                                <th>Amount</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for commission in commissions %}
+                            <tr>
+                                <td>{{ commission.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if commission.source == 'booking' %}
+                                        Booking
+                                    {% elif commission.source == 'pro_upgrade' %}
+                                        Pro Upgrade
+                                    {% endif %}
+                                </td>
+                                <td>₹{{ commission.amount|floatformat:2 }}</td>
+                                <td>
+                                    {% if commission.source == 'booking' and commission.booking %}
+                                        Booking ID: {{ commission.booking.id }} ({{ commission.booking.travel_package.package_name }})
+                                    {% elif commission.source == 'pro_upgrade' and commission.travel_agent %}
+                                        Travel Agent: {{ commission.travel_agent.username }}
+                                    {% else %}
+                                        No additional details
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="no-data">No commissions recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

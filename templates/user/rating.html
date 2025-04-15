@@ -1,0 +1,96 @@
+{% extends 'user/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  .rating-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.15));
+    backdrop-filter: blur(10px);
+  }
+
+  .rating-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 500px;
+    width: 100%;
+    color: #fff;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .rating-stars input {
+    display: none;
+  }
+
+  .rating-stars label {
+    font-size: 2rem;
+    color: #bbb;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+
+  .rating-stars input:checked ~ label,
+  .rating-stars label:hover,
+  .rating-stars label:hover ~ label {
+    color: #ffc107;
+  }
+
+  .form-control {
+    background-color: rgba(255,255,255,0.1);
+    border: none;
+    color: #fff;
+  }
+
+  .form-control::placeholder {
+    color: #ddd;
+  }
+
+  .submit-btn {
+    background: #ffc107;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 10px;
+    color: #000;
+    transition: 0.3s;
+  }
+
+  .submit-btn:hover {
+    background: #e0a800;
+  }
+</style>
+
+<div class="rating-container">
+  <div class="rating-card">
+    <h3 class="text-center mb-4">Rate {{ travel_package.package_name }}</h3>
+
+    <form method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="package_id" value="{{ travel_package.id }}">
+
+      <!-- Star Rating -->
+      <div class="rating-stars text-center mb-4">
+        <input type="radio" name="rating" id="star5" value="5"><label for="star5">★</label>
+        <input type="radio" name="rating" id="star4" value="4"><label for="star4">★</label>
+        <input type="radio" name="rating" id="star3" value="3"><label for="star3">★</label>
+        <input type="radio" name="rating" id="star2" value="2"><label for="star2">★</label>
+        <input type="radio" name="rating" id="star1" value="1"><label for="star1">★</label>
+      </div>
+
+      <!-- Feedback -->
+      <div class="form-group mb-4">
+        <textarea name="feedback" class="form-control" rows="4" placeholder="Leave your feedback..."></textarea>
+      </div>
+
+      <!-- Submit -->
+      <div class="text-center">
+        <button type="submit" class="submit-btn">Submit Feedback</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

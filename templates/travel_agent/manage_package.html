@@ -9,8 +9,11 @@
         <thead>
             <tr>
                 <th>Package Name</th>
+                {% comment %} <th>Destination</th> {% endcomment %}
                 <th>Price</th>
                 <th>Duration</th>
+                <th>No.persons</th>
+                <th>Category</th>
                 <th>Description</th>
                 <th>Actions</th>
             </tr>
@@ -19,8 +22,11 @@
             {% for package in packages %}
             <tr>
                 <td>{{ package.package_name }}</td>
+                {% comment %} <td>{{ package.destination }}</td> {% endcomment %}
                 <td>₹{{ package.price }}</td>
                 <td>{{ package.duration }} days</td>
+                <td>{{ package.num_persons }} </td>
+                <td>{{ package.category }} </td>
                 <td>{{ package.description|truncatechars:75 }}</td>
                 <td>
                     <a href="{% url 'edit_package' package.id %}" class="btn btn-warning btn-sm">Edit</a>

@@ -1,0 +1,177 @@
+{% extends 'user/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .card-body {
+        min-width: 200px;
+    }
+    .wallet-balance {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #28a745;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="{% url 'profile' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                    <i class="fas fa-user"></i> Account Details
+                </a>
+                <a href="{% url 'view_bookings' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-book"></i> Bookings
+                </a>
+                <a href="{% url 'wishlist' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'wishlist' %}active{% endif %}">
+                    <i class="fas fa-heart"></i> Wishlists
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="fas fa-map-marker-alt"></i> My Address
+                </a>
+                <a href="{% url 'coupon' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-ticket-alt"></i> Coupons
+                </a>
+                <a href="{% url 'wallet' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'wallet' %}active{% endif %}">
+                    <i class="fas fa-wallet"></i> My Wallet
+                </a>
+                <a href="{% url 'user_blog' %}" class="list-group-item list-group-item-action {% if request.resolver_match.url_name == 'user_blog' %}active{% endif %}">
+                    <i class="fas fa-blog"></i> Blog
+                </a>
+                <a href="{% url 'logout' %}" class="list-group-item list-group-item-action">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Wallet Content -->
+        <div class="col-md-9">
+            <h4>Your Wallet</h4>
+            <div id="walletMessages"></div>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <p class="wallet-balance">Balance: ₹{{ wallet.balance }}</p>
+                    {% if wallet.balance > 0 %}
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#withdrawModal">
+                            Withdraw Funds
+                        </button>
+                    {% else %}
+                        <p class="text-muted">No funds available for withdrawal.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1" role="dialog" aria-labelledby="withdrawModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="withdrawModalLabel">Withdraw Funds</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="withdrawForm">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="amount" class="form-label">Amount (₹)</label>
+                        <input type="number" step="0.01" min="1" max="{{ wallet.balance }}" name="amount" id="amount" class="form-control" required>
+                        <div id="amountError" class="text-danger" style="font-size: 0.9rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account_holder" class="form-label">Account Holder Name</label>
+                        <input type="text" name="account_holder" id="account_holder" class="form-control" required>
+                        <div id="accountHolderError" class="text-danger" style="font-size: 0.9rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="account_number" class="form-label">Account Number</label>
+                        <input type="text" name="account_number" id="account_number" class="form-control" required>
+                        <div id="accountNumberError" class="text-danger" style="font-size: 0.9rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="ifsc_code" class="form-label">IFSC Code</label>
+                        <input type="text" name="ifsc_code" id="ifsc_code" class="form-control" required>
+                        <div id="ifscCodeError" class="text-danger" style="font-size: 0.9rem;"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Withdrawal Request</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById("withdrawForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        // Clear previous error messages
+        document.getElementById("amountError").textContent = "";
+        document.getElementById("accountHolderError").textContent = "";
+        document.getElementById("accountNumberError").textContent = "";
+        document.getElementById("ifscCodeError").textContent = "";
+        document.getElementById("walletMessages").innerHTML = "";
+
+        let formData = new FormData(this);
+
+        fetch("{% url 'withdraw_funds' %}", {
+            method: "POST",
+            body: formData,
+            headers: {
+                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+            },
+            credentials: "same-origin"
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById("walletMessages").innerHTML = `
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        ${data.message}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                `;
+                // Close modal
+                $('#withdrawModal').modal('hide');
+                // Reload page to update balance
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                // Display field-specific errors
+                if (data.errors) {
+                    if (data.errors.amount) document.getElementById("amountError").textContent = data.errors.amount;
+                    if (data.errors.account_holder) document.getElementById("accountHolderError").textContent = data.errors.account_holder;
+                    if (data.errors.account_number) document.getElementById("accountNumberError").textContent = data.errors.account_number;
+                    if (data.errors.ifsc_code) document.getElementById("ifscCodeError").textContent = data.errors.ifsc_code;
+                }
+                // General error
+                document.getElementById("walletMessages").innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ${data.message || "Error processing withdrawal."}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            document.getElementById("walletMessages").innerHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Network error occurred. Please try again.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+            `;
+        });
+    });
+</script>
+
+{% endblock %}

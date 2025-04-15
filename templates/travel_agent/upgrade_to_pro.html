@@ -1,0 +1,174 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade to Pro</title>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+            min-height: 100vh;
+            padding: 3rem 1rem;
+        }
+        .card {
+            border: none;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-width: 1400px;
+            margin: auto;
+            overflow: hidden;
+        }
+        .pro-banner {
+            background: linear-gradient(135deg, #6b21a8, #a855f7);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .pro-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent);
+            opacity: 0.3;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            min-height: 220px;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+        .feature-icon {
+            color: #6b21a8;
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        .upgrade-btn {
+            background: linear-gradient(135deg, #6b21a8, #a855f7);
+            border: none;
+            border-radius: 50px;
+            padding: 0.75rem 2.5rem;
+            font-weight: 600;
+            color: white;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        .upgrade-btn:hover {
+            background: linear-gradient(135deg, #4c1d95, #9333ea);
+            transform: scale(1.05);
+        }
+        h1, h2, h3 {
+            font-weight: 700;
+        }
+        .text-muted {
+            font-size: 0.9rem;
+        }
+        .feature-row {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+        }
+        .feature-card {
+            flex: 1;
+            margin: 0 0.5rem;
+        }
+        .upgrade-section {
+            margin-top: 3rem; /* Added top margin for spacing */
+        }
+        @media (max-width: 992px) {
+            .feature-row {
+                flex-wrap: wrap;
+            }
+            .feature-card {
+                flex: 0 0 48%;
+                margin: 0.5rem;
+            }
+            .upgrade-section {
+                margin-top: 2rem;
+            }
+        }
+        @media (max-width: 576px) {
+            .pro-banner {
+                padding: 2rem 1rem;
+            }
+            .feature-card {
+                flex: 0 0 100%;
+                margin: 0.5rem 0;
+                padding: 1rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            h2 {
+                font-size: 1.75rem;
+            }
+            .upgrade-section {
+                margin-top: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="pro-banner">
+            <h1 class="display-4"><i class="fas fa-crown mr-2"></i> Upgrade to Pro</h1>
+            <p class="lead">Unlock premium features to elevate your travel business!</p>
+        </div>
+        <div class="card-body p-5 p-md-5">
+            <h2 class="text-center mb-5">Why Go Pro?</h2>
+            <div class="feature-row mb-5">
+                <div class="feature-card">
+                    <i class="fas fa-bolt feature-icon"></i>
+                    <h3 class="h5 mb-2">Priority Listings</h3>
+                    <p class="text-muted">Your packages shine at the top of search results.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line feature-icon"></i>
+                    <h3 class="h5 mb-2">Advanced Analytics</h3>
+                    <p class="text-muted">Gain insights with visitor stats and booking trends.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-headset feature-icon"></i>
+                    <h3 class="h5 mb-2">Premium Support</h3>
+                    <p class="text-muted">Fast, dedicated support whenever you need it.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-bullhorn feature-icon"></i>
+                    <h3 class="h5 mb-2">Promotional Tools</h3>
+                    <p class="text-muted">Boost visibility with exclusive banners and offers.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-badge-check feature-icon"></i>
+                    <h3 class="h5 mb-2">Verified Badge</h3>
+                    <p class="text-muted">Build trust with a pro badge on your profile.</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-upload feature-icon"></i>
+                    <h3 class="h5 mb-2">Unlimited Uploads</h3>
+                    <p class="text-muted">Create as many packages as you want, no limits.</p>
+                </div>
+            </div>
+            <div class="upgrade-section text-center">
+                <a style="text-decoration: none;" href="{% url 'create_checkout_session' %}" class="btn upgrade-btn">
+                    <i class="fas fa-arrow-up mr-2"></i> Upgrade Now for $29/month
+                </a>
+                <p class="text-muted mt-3">Cancel anytime. No hidden fees.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+</body>
+</html>

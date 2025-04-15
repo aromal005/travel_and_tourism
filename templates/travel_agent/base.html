@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Travel Agent Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
@@ -25,6 +26,9 @@
             padding-top: 60px;
             position: fixed;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            overflow-y: auto; /* Enable vertical scrolling */
+            top: 0;
+            bottom: 0;
         }
         #sidebar a {
             color: white;
@@ -106,9 +110,44 @@
             bottom: 0;
             left: 0;
         }
+
+    
+            /* Existing styles unchanged */
+           /* Pro Badge */
+    .pro-badge {
+        display: inline-block;
+        background: linear-gradient(45deg, #ffc107, #ffca2c); /* Gold gradient */
+        color: #212529; /* Dark text for contrast */
+        font-size: 12px;
+        font-weight: 600; /* Slightly bolder */
+        padding: 5px 10px; /* Slightly larger for prominence */
+        border-radius: 20px; /* Softer, pill-like shape */
+        margin-left: 10px;
+        vertical-align: middle;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 8px rgba(255, 193, 7, 0.3); /* Subtle glow */
+        text-transform: uppercase; /* Makes it stand out */
+        letter-spacing: 0.5px; /* Refined spacing */
+        transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth animation */
+    }
+    .pro-badge:hover {
+        transform: scale(1.05); /* Slight zoom on hover */
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3), 0 0 12px rgba(255, 193, 7, 0.5); /* Enhanced glow */
+    }
+
+    /* Messages */
+    .messages-container {
+        margin-top: 60px; /* Matches navbar height */
+        margin-left: 260px; /* Matches sidebar width */
+        width: calc(100% - 260px);
+        z-index: 999; /* Below navbar (z-index: 1000) */
+        position: fixed;
+        top: 0;
+    }
+        
         
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-dark">
         <!--<span class="navbar-brand">Travel Agent Dashboard</span>-->
@@ -117,23 +156,74 @@
         </a>
         
         <div class="nav-icons">
-            <a href="#"><i class="fas fa-bell"></i></a>
+            <a href="#" id="notification-bell" class="position-relative" data-bs-toggle="modal" data-bs-target="#notificationModal">
+                <i class="fas fa-bell fa-lg"></i>
+                <span id="notification-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                    0
+                </span>
+            </a>
             <a href="{% url 'agent_profile' %}"><i class="fas fa-user"></i></a>
             <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i></a>
         </div>
     </nav>
 
+    <!-- Notification Modal -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-labelledby="notificationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="notificationModalLabel">Notifications</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- "Mark All as Read" Button -->
+                    <button id="mark-all-read" class="btn btn-sm btn-primary mb-2" style="display: none;">Mark All as Read</button>
+    
+                    <ul id="notification-list" class="list-group">
+                        <li class="list-group-item text-center">No new notifications</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <div id="sidebar">
+        {% if request.user.is_authenticated and request.user.travelagentprofile.is_pro %}
+                <span class="pro-badge">Pro</span>
+            {% endif %}
         <h2 class="text-center py-3">Agent Dashboard</h2>
         <a href="{% url 'travel_agent_home' %}"><i class="fas fa-home"></i> Dashboard</a>
         <a href="{% url 'create_package' %}"><i class="fas fa-box"></i> Create Packages</a>
         <a href="{% url 'manage_package' %}"><i class="fas fa-tasks"></i> Manage Packages</a>
         <a href="{% url 'view_booking' %}"><i class="fas fa-calendar-check"></i> View Bookings</a>
         <a href="{% url 'category' %}"><i class="fas fa-layer-group"></i> Create Categories</a>
-        <a href="{% url 'complaint' %}"><i class="fas fa-shopping-cart"></i> Orders & Payments</a>
-        <a href="{% url 'payment' %}"><i class="fas fa-comments"></i> Complaints & Reviews</a>
+        <a href="{% url 'payment' %}"><i class="fas fa-shopping-cart"></i> Orders & Payments</a>
+        <a href="{% url 'customer_list' %}"><i class="fas fa-shopping-cart"></i> Customer List</a>
+        
+        {% if request.user.is_authenticated and not request.user.travelagentprofile.is_pro %}
+            <a href="{% url 'upgrade_to_pro' %}"><i class="fas fa-crown"></i> Upgrade to Pro</a>
+        {% endif %}
+        <a href="{% url 'complaint' %}"><i class="fas fa-comments"></i> Complaints & Reviews</a>
+        {% if request.user.is_authenticated and request.user.travelagentprofile.is_pro %}
+        <a href="{% url 'send_push_notification' %}"><i class="fas fa-comments"></i> Notification form</a> 
+    {% endif %}
     </div>
 
+    <!-- Messages display -->
+    {% if messages %}
+    <div class="messages-container">
+        <div class="container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
     <div id="main-content">
         {% block content %}
         {% endblock content %}
@@ -142,5 +232,233 @@
     <footer>
         &copy; 2025 Travel Agent Dashboard. All rights reserved.
     </footer>
+
+    <!-- Bootstrap and jQuery Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging.js";
+    
+        document.addEventListener("DOMContentLoaded", async function () {
+            // 🔹 Firebase Config
+            const firebaseConfig = {
+                apiKey: "AIzaSyDtt2bdy_57SObQV9RBb50lpMqV8zBusAI",
+                authDomain: "travel-tourism-d6c1f.firebaseapp.com",
+                projectId: "travel-tourism-d6c1f",
+                storageBucket: "travel-tourism-d6c1f.appspot.com",
+                messagingSenderId: "890365706860",
+                appId: "1:890365706860:web:3204d6075ff0377e2f8e49",
+                measurementId: "G-ZWJ6LQP4DM"
+            };
+    
+            // 🔹 Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const messaging = getMessaging(app);
+    
+            // 🔹 Register Service Worker
+            async function registerServiceWorker() {
+                if ("serviceWorker" in navigator) {
+                    try {
+                        const registration = await navigator.serviceWorker.register("/static/firebase-messaging-sw.js");
+                        console.log("✅ Service Worker Registered:", registration.scope);
+                        return registration;
+                    } catch (error) {
+                        console.error("❌ Service Worker Registration Failed:", error);
+                        return null;
+                    }
+                } else {
+                    console.error("❌ Service Workers are not supported in this browser.");
+                    return null;
+                }
+            }
+    
+            // 🔹 Request Notification Permission
+            async function requestNotificationPermission() {
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === "granted") {
+                        console.log("✅ Notification permission granted.");
+                        return true;
+                    } else {
+                        console.log("⚠️ Notification permission denied.");
+                        return false;
+                    }
+                } catch (error) {
+                    console.error("❌ Error requesting notification permission:", error);
+                    return false;
+                }
+            }
+    
+            // 🔹 Request FCM Token
+            async function requestFCMToken() {
+                const swRegistration = await registerServiceWorker();
+                if (!swRegistration) return;
+    
+                const permissionGranted = await requestNotificationPermission();
+                if (!permissionGranted) return;
+    
+                try {
+                    const token = await getToken(messaging, {
+                        vapidKey: "BOPq6Jns8mCYNK3LOqbXNVhFz1K5Y_dhKyigGg-JrcaTbW5oFMWF4uuFBJ4CtzAfVBHuSFXwruTZIH59Hw6d6KU",
+                        serviceWorkerRegistration: swRegistration // Attach the service worker
+                    });
+    
+                    if (token) {
+                        console.log("📲 FCM Token:", token);
+                        sendTokenToServer(token);
+                    } else {
+                        console.log("⚠️ No FCM Token received.");
+                    }
+                } catch (error) {
+                    console.error("❌ Error getting token:", error);
+                }
+            }
+    
+            // 🔹 Send FCM Token to Django Backend
+            function sendTokenToServer(token) {
+                console.log("Attempting to send token to server:", token);
+    
+                fetch("/travel_agent/update-fcm-token/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken() // Include CSRF token here
+                    },
+                    body: JSON.stringify({ fcm_token: token }) // Send as JSON
+                })
+                .then(response => response.json())
+                .then(data => console.log("✅ Server Response:", data))
+                .catch(error => console.error("❌ Error sending FCM token:", error));
+            }
+    
+            // 🔹 Get CSRF Token (Better Method)
+            function getCSRFToken() {
+                return document.cookie.split('; ').find(row => row.startsWith('csrftoken='))?.split('=')[1] || "";
+            }
+    
+            // 🔹 Handle Incoming Notifications
+            onMessage(messaging, (payload) => {
+                console.log("📩 New Notification:", payload);
+    
+                if (Notification.permission === "granted") {
+                    new Notification(payload.notification.title, {
+                        body: payload.notification.body,
+                        icon: "/static/images/notification-icon.png"
+                    });
+                } else {
+                    alert(`New Notification: ${payload.notification.title}`);
+                }
+    
+                fetchNotifications();
+            });
+    
+            // 🔹 Fetch Notifications
+            function fetchNotifications(manualTrigger = false) {
+                fetch("/travel_agent/get-notifications/")
+                    .then(response => response.json())
+                    .then(data => {
+                        const notificationCount = document.getElementById("notification-count");
+                        const notificationList = document.getElementById("notification-list");
+                        const markAllReadBtn = document.getElementById("mark-all-read");
+            
+                        let unreadCount = 0;
+            
+                        if (data.notifications.length === 0) {
+                            notificationList.innerHTML = `<li class="list-group-item text-center">No new notifications</li>`;
+                            notificationCount.style.display = "none";
+                            markAllReadBtn.style.display = "none";
+                            return;
+                        }
+            
+                        // Populate notification list dynamically
+                        notificationList.innerHTML = "";
+                        data.notifications.forEach(notification => {
+                            if (!notification.read) unreadCount++;
+                            const li = document.createElement("li");
+                            li.className = `list-group-item ${notification.read ? 'text-muted' : ''}`;
+                            li.innerHTML = `${notification.message} <small class="text-muted d-block">${notification.created_at}</small>`;
+                            notificationList.appendChild(li);
+                        });
+            
+                        // Update unread count
+                        notificationCount.innerText = unreadCount;
+                        notificationCount.style.display = unreadCount > 0 ? "inline" : "none";
+                        
+                        // Show "Mark All as Read" button only if there are unread notifications
+                        markAllReadBtn.style.display = unreadCount > 0 ? "block" : "none";
+                    })
+                    .catch(error => console.error("❌ Error fetching notifications:", error));
+            }
+            
+            // 🔹 Mark All as Read Function
+            document.getElementById("mark-all-read").addEventListener("click", function () {
+                fetch("/travel_agent/mark-all-read/", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("✅ Notifications marked as read:", data);
+                    fetchNotifications(true); // Refresh the notifications list
+                })
+                .catch(error => console.error("❌ Error marking notifications as read:", error));
+            });
+            
+            // 🔹 Fetch Notifications Every 10 Seconds
+            setInterval(fetchNotifications, 10000);
+            fetchNotifications();
+
+            // 📢 Show real-time popup notification
+            window.showNotificationPopup = function (message) {
+                console.log("Popup Function Called: " + message); // Debugging Step
+                const popup = document.createElement("div");
+                popup.innerText = message;
+                popup.className = "notification-popup";
+                document.body.appendChild(popup);
+            
+                setTimeout(() => {
+                    popup.remove();
+                }, 5000);
+            };
+    
+            // 🔹 Fetch Notifications Every 10 Seconds
+            setInterval(fetchNotifications, 10000);
+            fetchNotifications();
+    
+            // 🔹 Request FCM Token on Page Load
+            requestFCMToken();
+        });
+    </script>
+    
+    <style>
+        /* Style for the notification popup */
+        .notification-popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            font-size: 14px;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        </style>
+    
+    
+</body>
+
 </body>
 </html>

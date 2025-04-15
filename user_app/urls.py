@@ -2,6 +2,7 @@
 from django.urls import path
 from . import views
 
+
 urlpatterns = [
     path('', views.home, name='home'),
     path('about/', views.about, name='about'),
@@ -27,6 +28,20 @@ urlpatterns = [
     path('get_travel_alerts/', views.get_travel_alerts, name='get_travel_alerts'),
     path('edit-profile/', views.edit_user_profile, name='edit_user_profile'),
     path('booking/<int:package_id>/', views.booking, name='booking'),
-    path('store-bookings/<int:package_id>/', views.store_bookings, name='store_bookings'),
+    # path('store-bookings/<int:package_id>/', views.store_bookings, name='store_bookings'),
     path('view-bookings/', views.view_bookings, name='view_bookings'),
+    path('bookings/cancel/', views.cancel_booking, name='cancel_booking'),
+    path("create-checkout-session/<int:package_id>/", views.create_checkout_session, name="create_checkout_session"),
+    path("payment/success/", views.success_view, name="payment_success"),
+    path("payment/cancel/", views.cancel_view, name="payment_cancel"),
+    path("coupon/", views.coupon_view, name="coupon"),
+
+    #wallet
+    path('wallet/', views.wallet_view, name='wallet'),
+    path('wallet/withdraw/', views.withdraw_funds, name='withdraw_funds'),
+
+    path('complaint/', views.complaint_register, name='complaint_register'),
+    path('user_complaint/', views.user_complaint_view, name='user_complaint_view'),
+
+    path('rating/', views.rating, name='rating'),
 ]

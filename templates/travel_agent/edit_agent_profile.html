@@ -1,0 +1,62 @@
+{% extends "travel_agent/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg p-4">
+        <h2 class="mb-4 text-center">Edit Profile</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+                <!-- Profile Image -->
+                <div class="col-md-4 text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" class="rounded-circle img-fluid" style="width: 150px; height: 150px;" alt="Profile Picture">
+                    {% else %}
+                        <img src="{% static 'assets/img/default-profile.png' %}" class="rounded-circle img-fluid" style="width: 150px; height: 150px;" alt="Profile Picture">
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <input type="file" class="form-control" name="profile_picture">
+                    </div>
+                </div>
+
+                <!-- Profile Details -->
+                <div class="col-md-8">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="username" name="username" value="{{ user.username }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="phone" name="phone" value="{{ user.phone }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="company_name" class="form-label">Agency Name</label>
+                        <input type="text" class="form-control" id="company_name" name="company_name" value="{{ user.travelagentprofile.travel_company_name }}" required>
+                    </div>
+
+                    <!-- Save Changes Button -->
+                    <div class="text-end">
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        
+                        <a href="{% url 'agent_profile' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

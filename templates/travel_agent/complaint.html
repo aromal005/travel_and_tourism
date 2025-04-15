@@ -1,1 +1,52 @@
-<h1>Complaints page</h1>
+{% extends "travel_agent/base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">User Complaints</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="thead-dark">
+                <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Package</th>
+                    <th>Complaint</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for complaint in complaints %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ complaint.user.username }}</td>
+                    <td>{{ complaint.travel_package.package_name }}</td>
+                    <td>{{ complaint.details }}</td>
+                    <td>
+                        {% if complaint.status == "Pending" %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                        {% elif complaint.status == "Resolved" %}
+                            <span class="badge bg-success">Resolved</span>
+                        {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ complaint.date|date:"d M Y, h:i A" }}</td>
+                    <td>
+                        <a href="#" class="btn btn-success btn-sm">Resolve</a>
+                        <a href="#" class="btn btn-danger btn-sm">Reject</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center">No complaints found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock content %}

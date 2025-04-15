@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from .forms import UserRegistrationForm, TravelAgentRegistrationForm
 from user_app.views import home
 from .models import CustomUser, TravelAgentProfile
+from django.contrib import messages
 
 
 User = get_user_model()
@@ -11,16 +12,21 @@ User = get_user_model()
 
 # User Registration
 def register_user(request):
+    print("🚀 register_user function called")  # Debugging
+
     if request.method == "POST":
+        print("📝 Received a POST request")  # Debugging
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.user_type = "user"  # Explicitly set user type
-            user.save()
+            print("✅ Form is valid")  # Debugging
+            form.save()
             return redirect("login")
+        else:
+            print(f"❌ Form errors: {form.errors}")  # Debugging
     else:
+        print("🆕 GET request received, showing form")  # Debugging
         form = UserRegistrationForm()
-    
+
     return render(request, "common/register.html", {"form": form})
 
 # Travel Agent Registration
@@ -47,13 +53,17 @@ def login_view(request):
         user = authenticate(request, email=email, password=password)
         if user:
             login(request, user)
+            messages.success(request, f"Welcome back, {user.email}! You have successfully logged in.")
             
             if user.user_type == "admin":
                 return redirect("admin_dashboard")
+
             elif user.user_type == "travel_agent":
                 return redirect("travel_agent_home")
             else:
                 return redirect("home")
+        else:
+            messages.error(request, "Invalid email or password. Please try again.")
 
     return render(request, "common/login.html")
 

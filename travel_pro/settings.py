@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
+import firebase_admin
+from firebase_admin import credentials, messaging
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     'travel_agent',
     'common',
     'admin_app',
+    'django_celery_results',
 ]
 
 MIDDLEWARE = [
@@ -155,6 +158,35 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "161b8847e1d649a8e192ea20d332f1dc")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
-STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+# STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
+# STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 #print("GEMINI_API_KEY:", GEMINI_API_KEY)
+STRIPE_PUBLIC_KEY = "pk_test_51R4kZCBFjnvExNSEuqjWufT8Fgo4Si4Iyo0sWo4dQ6mFQD9XF6ZM6EVzt1GhubkAgri4Uwx1lOo7M0JOgVjdQzUb00F6nqGBTY"
+STRIPE_SECRET_KEY = "sk_test_51R4kZCBFjnvExNSEnABk3rpoQ0X4KcvtDfdRfX4ggxfyRn3xseaWfDFpYU7j4CWTOkM8wbjJGi2048kIDc4HexzL00vrMJmv4K"
+
+# Load Firebase credentials
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+FIREBASE_CREDENTIALS_PATH = os.path.join(BASE_DIR, "service-account.json")
+
+cred = credentials.Certificate(FIREBASE_CREDENTIALS_PATH)
+firebase_admin.initialize_app(cred)
+
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
+
+# Celery Configuration
+CELERY_BROKER_URL = 'django-db://'  # Use Django database as broker
+CELERY_RESULT_BACKEND = 'django-db'  # Store results in Django database
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_CACHE_BACKEND = 'django-cache'  # Optional: use Django cache for optimization
+
+# Email Configuration (unchanged)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'aromalvv005@gmail.com'  # Replace with your email
+EMAIL_HOST_PASSWORD = 'gjaj cqge cgow ebbz'  # Replace with your app-specific password
+DEFAULT_FROM_EMAIL = 'aromalvv005@gmail.com'

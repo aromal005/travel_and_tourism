@@ -45,49 +45,37 @@
     <div class="container-fluid booking mt-5 pb-5">
         <div class="container pb-5">
             <div class="bg-light shadow" style="padding: 30px;">
-                <div class="row align-items-center" style="min-height: 60px;">
-                    <div class="col-md-10">
-                        <div class="row">
-                            <div class="col-md-3">
-                                <div class="mb-3 mb-md-0">
-                                    <select class="custom-select px-4" style="height: 47px;">
-                                        <option selected>Destination</option>
-                                        <option value="1">Destination 1</option>
-                                        <option value="2">Destination 1</option>
-                                        <option value="3">Destination 1</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3 mb-md-0">
-                                    <div class="date" id="date1" data-target-input="nearest">
-                                        <input type="text" class="form-control p-4 datetimepicker-input" placeholder="Depart Date" data-target="#date1" data-toggle="datetimepicker"/>
+                <form method="GET" action="{% url 'package' %}">
+                    <div class="row align-items-center" style="min-height: 60px;">
+                        <div class="col-md-10"> 
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3 mb-md-0">
+                                        <input type="text" name="destination" class="form-control p-4" placeholder="Enter destination" value="{{ request.GET.destination }}">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3 mb-md-0">
-                                    <div class="date" id="date2" data-target-input="nearest">
-                                        <input type="text" class="form-control p-4 datetimepicker-input" placeholder="Return Date" data-target="#date2" data-toggle="datetimepicker"/>
+                                <div class="col-md-3">
+                                    <div class="mb-3 mb-md-0">
+                                        <input type="text" name="no_of_persons" class="form-control p-4" placeholder="No of persons" value="{{ request.GET.no_of_persons }}">
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-3">
-                                <div class="mb-3 mb-md-0">
-                                    <select class="custom-select px-4" style="height: 47px;">
-                                        <option selected>Duration</option>
-                                        <option value="1">Duration 1</option>
-                                        <option value="2">Duration 1</option>
-                                        <option value="3">Duration 1</option>
-                                    </select>
+                                <div class="col-md-3">
+                                    <div class="mb-3 mb-md-0">
+                                        <input type="text" name="budget" class="form-control p-4" placeholder="Budget" value="{{ request.GET.budget }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3 mb-md-0">
+                                        <input type="text" name="no_of_days" class="form-control p-4" placeholder="No of days" value="{{ request.GET.no_of_days }}">
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary btn-block" type="submit" style="height: 47px; margin-top: -2px;">Submit</button>
+                        </div>
                     </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-primary btn-block" type="submit" style="height: 47px; margin-top: -2px;">Submit</button>
-                    </div>
-                </div>
+                </form>
             </div>
         </div>
     </div>
@@ -116,7 +104,7 @@
                             <div class="d-flex justify-content-between mb-3">
                                 <small class="m-0"><i class="fa fa-map-marker-alt text-primary mr-2"></i>{{package.package_name}}</small>
                                 <small class="m-0"><i class="fa fa-calendar-alt text-primary mr-2"></i>{{package.duration}}days</small>
-                                <small class="m-0"><i class="fa fa-user text-primary mr-2"></i>2 Person</small>
+                                <small class="m-0"><i class="fa fa-user text-primary mr-2"></i>{{ package.num_persons }} Person</small>
                             </div>
                             <a class="h5 text-decoration-none" href="{% url 'package_detail' package.id %}">{{ package.description|truncatewords:10 }}</a>
                             <p class="m-0">
@@ -129,7 +117,12 @@
                             </p>
                             <div class="border-top mt-4 pt-4">
                                 <div class="d-flex justify-content-between">
-                                    <h6 class="m-0"><i class="fa fa-star text-primary mr-2"></i>4.5 <small>(250)</small></h6>
+                                    <h6 class="m-0"><i class="fa fa-star text-primary mr-2"></i>
+                                        {% if package.avg_rating %}
+                                            {{ package.avg_rating|floatformat:1 }} <small>({{ package.rating_count }})</small>
+                                        {% else %}
+                                            No ratings yet
+                                        {% endif %}</h6>
                                     <h5 class="m-0">{{package.price}}</h5>
                                 </div>
                             </div>

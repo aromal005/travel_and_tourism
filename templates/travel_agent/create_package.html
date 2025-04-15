@@ -10,6 +10,11 @@
             <label for="package_name" class="form-label">Package Name</label>
             <input type="text" class="form-control" id="package_name" name="package_name" required>
         </div>
+
+        <div class="mb-3">
+            <label for="package_name" class="form-label">Destination</label>
+            <input type="text" class="form-control" id="destination" name="destination" required>
+        </div>
         
         <div class="mb-3">
             <label for="price" class="form-label">Price</label>
@@ -20,6 +25,22 @@
             <label for="duration" class="form-label">Duration (in days)</label>
             <input type="number" class="form-control" id="duration" name="duration" required>
         </div>
+
+        <div class="mb-3">
+            <label for="num_persons" class="form-label">Number of Persons</label>
+            <input type="number" class="form-control" id="num_persons" name="num_persons" min="1" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
+            <select class="form-control" id="category" name="category" required>
+                <option value="" disabled selected>Select a category</option>
+                {% for category in categories %}
+                    <option value="{{ category.name }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
         
         <div class="mb-3">
             <label for="description" class="form-label">Description</label>

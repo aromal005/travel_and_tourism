@@ -6,7 +6,7 @@
         <!-- Left Side (Scrollable) -->
         <div class="col-md-8" style="max-height: 80vh; overflow-y: auto;">
             <h2 class="fw-bold">{{ package.package_name }} package</h2>
-            <p>{{ package.duration }} days | {{ package.package_name }}</p>
+            <p>{{ package.duration }} days | {{ package.package_name }} | {{ package.num_persons }} persons </p>
 
             {% if itineraries %}
                 <img src="{{ itineraries.0.image.url }}" class="img-fluid rounded mb-3" alt="Featured Itinerary">
@@ -101,7 +101,7 @@
                     </div>
                     <div class="form-group">
                         <label for="adults">Adults</label>
-                        <input type="number" class="form-control" id="adults" value="2" min="1">
+                        <input type="number" class="form-control" id="adults" value="{{ package.num_persons }}" min="1">
                     </div>
                     <div class="form-group">
                         <label for="children">Children</label>
@@ -151,17 +151,28 @@
                     </div>
                     <div class="form-group">
                         <label for="numAdults">Number of Adults</label>
-                        <input type="number" class="form-control" id="numAdults" name="num_adults" value="1" min="1" required>
+                        <input type="number" class="form-control" id="numAdults" name="num_adults" value="{{ package.num_persons }}" min="1" required>
                     </div>
                     <div class="form-group">
                         <label for="numChildren">Number of Children</label>
                         <input type="number" class="form-control" id="numChildren" name="num_children" value="0" min="0">
                     </div>
                     <div class="form-group">
-                        <label for="totalAmount">Total Amount (₹)</label>
-                        <input type="text" class="form-control" id="totalAmount" name="total_amount" value="{{ package.price }}" readonly>
+                        <label for="couponCode">Coupon Code</label>
+                        <select class="form-control" id="couponCode" name="coupon_code">
+                            <option value="" data-discount="0">-- Select a Coupon --</option>
+                            {% for coupon in coupons %}
+                                <option value="{{ coupon.code }}" data-discount="{{ coupon.discount_percentage }}">{{ coupon.name }}</option>
+                            {% empty %}
+                                <option value="" data-discount="0" disabled>No coupons available</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <button type="submit" class="btn btn-primary btn-block">Confirm Booking</button>
+                    <div class="form-group">
+                        <label for="totalAmount">Total Amount (₹)</label>
+                        <input type="text" class="form-control" id="totalAmount" name="total_amount" value="{{ package.price|floatformat:2 }}" readonly>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" id="checkout-button">Pay Now</button>
                 </form>
             </div>
         </div>
@@ -213,42 +224,95 @@
     </script>
 
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("bookingForm").addEventListener("submit", function (event) {
-                console.log("modal activated");  // Debugging log to check if script runs
-                event.preventDefault();  // Prevent page reload
-        
-                let formData = new FormData(this);
-                let packageId = document.getElementById("package_id").value;  // Ensure this ID exists
-        
-                console.log("form activated");  // Debugging log to check if event fires
-        
-                fetch(`/store-bookings/${packageId}/`, {  
-                    method: "POST",
-                    body: formData,
-                    headers: {
-                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-                    },
-                    credentials: "same-origin" // Ensures session authentication
-                })
-                .then(response => {
-                    console.log("Response received");  // Debugging log to check if fetch works
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Data:", data);  // Debugging log to check response data
-                    if (data.success) {
-                        alert("Booking successful!");
-                        location.reload();
-                    } else {
-                        alert("Error: " + data.error);
-                    }
-                })
-                .catch(error => console.error("Fetch error:", error));
+    <script src="https://js.stripe.com/v3/"></script>
+<script>
+    let stripe = Stripe("pk_test_51R4kZCBFjnvExNSEuqjWufT8Fgo4Si4Iyo0sWo4dQ6mFQD9XF6ZM6EVzt1GhubkAgri4Uwx1lOo7M0JOgVjdQzUb00F6nqGBTY");
+
+    function getCSRFToken() {
+        let cookieValue = null;
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith("csrftoken=")) {
+                cookieValue = cookie.substring("csrftoken=".length, cookie.length);
+                break;
+            }
+        }
+        return cookieValue;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const couponSelect = document.getElementById("couponCode");
+        const totalAmountInput = document.getElementById("totalAmount");
+        const originalPrice = parseFloat("{{ package.price|floatformat:2 }}");
+
+        // Function to update total amount based on selected coupon
+        function updateTotalAmount() {
+            const selectedOption = couponSelect.options[couponSelect.selectedIndex];
+            const discountPercentage = parseFloat(selectedOption.getAttribute("data-discount")) || 0;
+            let discountedPrice = originalPrice;
+
+            if (discountPercentage > 0) {
+                discountedPrice = originalPrice * (100 - discountPercentage) / 100;
+            }
+
+            totalAmountInput.value = discountedPrice.toFixed(2);
+        }
+
+        // Update price when coupon changes
+        couponSelect.addEventListener("change", updateTotalAmount);
+
+        // Initialize price
+        updateTotalAmount();
+
+        // Form submission for Stripe checkout
+        document.getElementById("bookingForm").addEventListener("submit", function (event) {
+            event.preventDefault();
+            console.log("Form submitted");
+
+            let formData = new FormData(this);
+            let packageId = document.getElementById("package_id").value;
+
+            // Convert form data to JSON
+            let jsonData = {};
+            formData.forEach((value, key) => {
+                jsonData[key] = value;
+            });
+
+            console.log("Sending JSON data:", jsonData);
+
+            fetch(`/create-checkout-session/${packageId}/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCSRFToken()
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error("Response text:", text);
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(session => {
+                if (session.id) {
+                    stripe.redirectToCheckout({ sessionId: session.id });
+                } else {
+                    console.error("Error:", session.error);
+                    alert("Error: " + session.error);
+                }
+            })
+            .catch(error => {
+                console.error("Fetch error:", error);
+                alert("Payment initiation failed: " + error.message);
             });
         });
-        
-        
-    </script>
+    });
+</script>
+
+
 {% endblock %}

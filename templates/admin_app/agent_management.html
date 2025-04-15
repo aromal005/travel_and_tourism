@@ -1,101 +1,138 @@
 {% extends 'admin_app/base.html' %}
 {% block content %}
 
-    <div class="content p-4" style="padding-top: 100px; margin-top: 60px;">
-        <h2 class="mb-4">Travel Agent Management</h2>
-        <div class="card glass-effect p-3">
-            <input type="text" class="form-control mb-3" placeholder="Search Travel Agents...">
-            <div class="table-responsive">
-                <table class="table table-hover table-bordered">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>John Doe</td>
-                            <td>john@example.com</td>
-                            <td>+1234567890</td>
-                            <td>
-                                <span class="badge bg-success" id="status-badge-1">Active</span>
-                            </td>
-                            <td>
-                                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#viewAgentModal">View</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
+<div class="content p-4" style="padding-top: 100px; margin-top: 60px;">
+    <h2 class="mb-4">Travel Agent Management</h2>
+    <div class="card glass-effect p-3">
+        <form method="GET" action="{% url 'agent_management' %}">
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" name="search" placeholder="Search Travel Agents..." 
+                       value="{{ search_query|default_if_none:'' }}">
+                <button class="btn btn-primary" type="submit">Search</button>
+            </div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for agent in agents %}
+                    <tr>
+                        <td>{{ agent.name }}</td>
+                        <td>{{ agent.email }}</td>
+                        <td>{{ agent.phone }}</td>
+                        <td>
+                            <span class="badge bg-{% if agent.status == 'Active' %}success{% else %}danger{% endif %}" 
+                                  id="status-badge-{{ agent.id }}">
+                                {{ agent.status }}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-info btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#viewAgentModal{{ agent.id }}">View</button>
+                            <button class="btn btn-{% if agent.status == 'Active' %}secondary{% else %}success{% endif %} btn-sm toggle-status" 
+                                    data-id="{{ agent.id }}">
+                                {% if agent.status == 'Active' %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No travel agents found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-                                <button class="btn btn-secondary btn-sm toggle-status" data-id="1">Deactivate</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Jane Smith</td>
-                            <td>jane@example.com</td>
-                            <td>+9876543210</td>
-                            <td>
-                                <span class="badge bg-danger" id="status-badge-2">Inactive</span>
-                            </td>
-                            <td>
-                                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#viewAgentModal">View</button>
-                                <button class="btn btn-danger btn-sm">Delete</button>
-                                <button class="btn btn-success btn-sm toggle-status" data-id="2">Activate</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+<!-- Modal for Viewing Travel Agent Details -->
+{% for agent in agents %}
+<div class="modal fade" id="viewAgentModal{{ agent.id }}" tabindex="-1" 
+     aria-labelledby="viewAgentModalLabel{{ agent.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-effect">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="viewAgentModalLabel{{ agent.id }}">Travel Agent Details</h5>
+                <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p><strong>Name:</strong> {{ agent.name }}</p>
+                <p><strong>Email:</strong> {{ agent.email }}</p>
+                <p><strong>Phone:</strong> {{ agent.phone }}</p>
+                <p><strong>Business Name:</strong> {{ agent.business_name }}</p>
+                <p><strong>Pro Subscription:</strong> 
+                    {% if agent.is_pro %}Active{% else %}Not Subscribed{% endif %}</p>
+                <p><strong>Pro Expiry Date:</strong> 
+                    {{ agent.pro_expiry_date|date:"F d, Y"|default:"N/A" }}</p>
+                <p><strong>Total Packages Listed:</strong> {{ agent.total_packages }}</p>
+                <p><strong>Total Bookings Received:</strong> {{ agent.total_bookings }}</p>
+                <p><strong>Last Booking Date:</strong> 
+                    {{ agent.last_booking_date|date:"F d, Y"|default:"No bookings" }}</p>
+                <p><strong>Reviews & Ratings:</strong> No ratings</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
+</div>
+{% endfor %}
 
-    <!-- Modal for Viewing Travel Agent Details -->
-    <div class="modal fade" id="viewAgentModal" tabindex="-1" aria-labelledby="viewAgentModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content glass-effect">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="viewAgentModalLabel">Travel Agent Details</h5>
-                    <button type="button" class="btn-close text-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <p><strong>Name:</strong> John Doe</p>
-                    <p><strong>Email:</strong> john@example.com</p>
-                    <p><strong>Phone:</strong> +1234567890</p>
-                    <p><strong>Business Name:</strong> Explore Travels</p>
-                    <p><strong>Total Packages Listed:</strong> 25</p>
-                    <p><strong>Total Bookings Received:</strong> 120</p>
-                    <p><strong>Last Booking Date:</strong> March 10, 2025</p>
-                    <p><strong>Preferred Destinations:</strong> Paris, Maldives, Thailand</p>
-                    <p><strong>Reviews & Ratings:</strong> ⭐⭐⭐⭐☆ (4.5/5)</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            document.querySelectorAll(".toggle-status").forEach(button => {
-                button.addEventListener("click", function() {
-                    let agentId = this.getAttribute("data-id");
-                    let badge = document.getElementById(`status-badge-${agentId}`);
-                    if (badge.classList.contains("bg-success")) {
-                        badge.classList.replace("bg-success", "bg-danger");
-                        badge.innerText = "Inactive";
-                        this.innerText = "Activate";
-                        this.classList.replace("btn-secondary", "btn-success");
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".toggle-status").forEach(button => {
+        button.addEventListener("click", function() {
+            let agentId = this.getAttribute("data-id");
+            let badge = document.getElementById(`status-badge-${agentId}`);
+            let action = badge.innerText === "Active" ? "deactivate" : "activate";
+            
+            // Show confirmation dialog
+            if (confirm(`Are you sure you want to ${action} this agent?`)) {
+                // Send AJAX request to toggle status
+                fetch("{% url 'toggle_agent_status' %}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                        "X-CSRFToken": "{{ csrf_token }}",
+                    },
+                    body: `agent_id=${agentId}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.new_status === "Active") {
+                            badge.classList.replace("bg-danger", "bg-success");
+                            badge.innerText = "Active";
+                            button.innerText = "Deactivate";
+                            button.classList.replace("btn-success", "btn-secondary");
+                        } else {
+                            badge.classList.replace("bg-success", "bg-danger");
+                            badge.innerText = "Inactive";
+                            button.innerText = "Activate";
+                            button.classList.replace("btn-secondary", "btn-success");
+                        }
                     } else {
-                        badge.classList.replace("bg-danger", "bg-success");
-                        badge.innerText = "Active";
-                        this.innerText = "Deactivate";
-                        this.classList.replace("btn-success", "btn-secondary");
+                        alert("Error: " + data.error);
                     }
+                })
+                .catch(error => {
+                    alert("An error occurred while updating status.");
+                    console.error(error);
                 });
-            });
+            }
         });
-    </script>
+    });
+});
+</script>
 
 {% endblock %}

@@ -50,3 +50,39 @@ class Booking(models.Model):
 
     def __str__(self):
         return f"Booking {self.id} - {self.user.username} ({self.status})"
+    
+class Wallet(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='wallet')
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+class Complaint(models.Model):
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='complaints'
+    )
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    subject = models.CharField(max_length=255)
+    message = models.TextField()
+    file = models.FileField(
+        upload_to='complaints/files/%Y/%m/%d/',
+        null=True,
+        blank=True,
+        help_text="Upload an image or document related to your complaint (optional)."
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=(
+            ('pending', 'Pending'),
+            ('resolved', 'Resolved'),
+            ('closed', 'Closed'),
+        ),
+        default='pending'
+    )
+
+    def __str__(self):
+        return f"Complaint by {self.name} - {self.subject}"
